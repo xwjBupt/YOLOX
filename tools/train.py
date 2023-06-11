@@ -11,6 +11,8 @@ import time
 import torch
 import torch.backends.cudnn as cudnn
 import glob
+import os
+import setproctitle
 
 from yolox.core import launch
 from yolox.exp import Exp, check_exp_value, get_exp
@@ -165,18 +167,12 @@ def main(exp: Exp, args):
     configure_nccl()
     configure_omp()
     cudnn.benchmark = True
-    timestamp = time.strftime("%m_%d-%H_%M", time.localtime())
-    if args.no_debug:
-        args.gitinfo = git_commit(
-            work_dir="/ai/mnt/code/YOLOX",
-            commit_info=exp.exp_name,
-            time_stamp=timestamp,
-        )
     trainer = exp.get_trainer(args)
     trainer.train()
 
 
 if __name__ == "__main__":
+    timestamp = time.strftime("%m_%d-%H_%M", time.localtime())
     configure_module()
     args = make_parser().parse_args()
     exp = get_exp(args.exp_file, args.name)
@@ -193,6 +189,15 @@ if __name__ == "__main__":
         exp.dataset = exp.get_dataset(cache=True, cache_type=args.cache)
 
     dist_url = "auto" if args.dist_url is None else args.dist_url
+    setproctitle.setproctitle(exp.exp_name + "@" + timestamp)
+    if args.no_debug:
+        args.gitinfo = git_commit(
+            work_dir="/ai/mnt/code/YOLOX",
+            commit_info=exp.exp_name,
+            time_stamp=timestamp,
+        )
+    else:
+        os.environ["WANDB_MODE"] = "dryrun"
     launch(
         main,
         num_gpu,

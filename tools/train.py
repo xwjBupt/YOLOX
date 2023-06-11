@@ -6,20 +6,72 @@ import argparse
 import random
 import warnings
 from loguru import logger
-
+from git import Repo
+import time
 import torch
 import torch.backends.cudnn as cudnn
+import glob
 
 from yolox.core import launch
 from yolox.exp import Exp, check_exp_value, get_exp
 from yolox.utils import configure_module, configure_nccl, configure_omp, get_num_devices
 
 
+def git_commit(
+    work_dir,
+    commit_info,
+    time_stamp,
+    levels=10,
+    postfixs=[".py", ".sh"],
+    debug=False,
+):
+    cid = "not generate"
+    branch = "master"
+    if not debug:
+        repo = Repo(work_dir)
+        toadd = []
+        branch = repo.active_branch.name
+        for i in range(levels):
+            for postfix in postfixs:
+                filename = glob.glob(work_dir + (i + 1) * "/*" + postfix)
+                for x in filename:
+                    if (
+                        not ("play" in x)
+                        and not ("local" in x)
+                        and not ("Untitled" in x)
+                        and not ("wandb" in x)
+                    ):
+                        toadd.append(x)
+        index = repo.index  # 获取暂存区对象
+        index.add(toadd)
+        index.commit(commit_info)
+        cid = repo.head.commit.hexsha
+
+    commit_tag = (
+        commit_info
+        + "@{}".format(time_stamp)
+        + "\n"
+        + "COMMIT BRANCH >>> "
+        + branch
+        + " <<< \n"
+        + "COMMIT ID >>> "
+        + cid
+        + " <<<"
+    )
+    record_commit_info = "COMMIT TAG [\n%s]\n" % commit_tag
+    return record_commit_info
+
+
 def make_parser():
     parser = argparse.ArgumentParser("YOLOX train parser")
     parser.add_argument("-expn", "--experiment-name", type=str, default=None)
     parser.add_argument("-n", "--name", type=str, default=None, help="model name")
-
+    parser.add_argument(
+        "--no_debug",
+        action="store_true",
+        help="weather in debug mode, given = no debug, not given  = in debug",
+    )
+    parser.add_argument("--gitinfo", type=str, default="<<< DEBUG >>>")
     # distributed
     parser.add_argument(
         "--dist-backend", default="nccl", type=str, help="distributed backend"
@@ -30,9 +82,9 @@ def make_parser():
         type=str,
         help="url used to set up distributed training",
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=64, help="batch size")
+    parser.add_argument("-b", "--batch-size", type=int, default=16, help="batch size")
     parser.add_argument(
-        "-d", "--devices", default=None, type=int, help="device for training"
+        "-d", "--devices", default=0, type=int, help="device for training"
     )
     parser.add_argument(
         "-f",
@@ -83,10 +135,10 @@ def make_parser():
     parser.add_argument(
         "-l",
         "--logger",
+        default="wandb",
         type=str,
         help="Logger to be used for metrics. \
         Implemented loggers include `tensorboard` and `wandb`.",
-        default="tensorboard"
     )
     parser.add_argument(
         "opts",
@@ -113,7 +165,13 @@ def main(exp: Exp, args):
     configure_nccl()
     configure_omp()
     cudnn.benchmark = True
-
+    timestamp = time.strftime("%m_%d-%H_%M", time.localtime())
+    if args.no_debug:
+        args.gitinfo = git_commit(
+            work_dir="/ai/mnt/code/YOLOX",
+            commit_info=exp.exp_name,
+            time_stamp=timestamp,
+        )
     trainer = exp.get_trainer(args)
     trainer.train()
 

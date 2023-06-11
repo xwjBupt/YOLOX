@@ -4,6 +4,8 @@
 
 from .coco import COCODataset
 from .coco_classes import COCO_CLASSES
+from .stenosis import STENOSISDataset
+from .stenosis_classes import STENOSIS_CLASSES
 from .datasets_wrapper import CacheDataset, ConcatDataset, Dataset, MixConcatDataset
 from .mosaicdetection import MosaicDetection
 from .voc import VOCDetection

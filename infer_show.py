@@ -8,7 +8,7 @@ import time
 from loguru import logger
 from tqdm import tqdm
 import cv2
-
+import json
 import torch
 
 from yolox.data.data_augment import ValTransform
@@ -194,15 +194,44 @@ class Predictor(object):
         return vis_res
 
 
-def image_demo(predictor, vis_folder, path, current_time, save_result):
+def add_gt_infos(gt_json_name, result_image):
+    with open(gt_json_name, mode="r") as js_lo:
+        content = json.load(js_lo)
+    for index in range(len(content["shapes"])):
+        p1 = content["shapes"][index]["points"][0]
+        p2 = content["shapes"][index]["points"][1]
+        x1 = int(min(p1[0], p2[0]))
+        x2 = int(max(p1[0], p2[0]))
+        y1 = int(min(p1[1], p2[1]))
+        y2 = int(max(p1[1], p2[1]))
+        label = content["shapes"][index]["label"]
+        cv2.rectangle(
+            result_image,
+            (x1, y1 + 1),
+            (x2, y2 + 1),
+            (255, 0, 0),
+            1,
+        )
+        cv2.putText(
+            result_image,
+            label,
+            (x1, y1 + 2),
+            cv2.FONT_HERSHEY_COMPLEX,
+            0.4,
+            (255, 0, 0),
+            thickness=1,
+        )
+
+    return result_image
+
+
+def image_demo(predictor, save_folder, path, current_time, save_result):
     if os.path.isdir(path):
         files = get_image_list(path)
     else:
         files = [path]
     files.sort()
-    save_folder = os.path.join(
-        vis_folder + "@" + time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
-    )
+
     train_index = 0
     os.makedirs(save_folder, exist_ok=True)
     for image_name in tqdm(files):
@@ -215,11 +244,15 @@ def image_demo(predictor, vis_folder, path, current_time, save_result):
             continue
         outputs, img_info = predictor.inference(image_name)
         result_image = predictor.visual(outputs[0], img_info, predictor.confthre)
+        gt_name = image_name[:-4] + ".json"
+        if os.path.exists(gt_name):
+            result_image = add_gt_infos(gt_name, result_image)
         save_file_name = os.path.join(
             save_folder, phase + "@" + os.path.basename(image_name)
         )
         cv2.imwrite(save_file_name, result_image)
         ch = cv2.waitKey(0)
+
         if ch == 27 or ch == ord("q") or ch == ord("Q"):
             break
     logger.info("Saving detection result in {}".format(save_folder))
@@ -333,9 +366,12 @@ def main(exp, args):
     )
     current_time = time.localtime()
     if args.demo == "image":
-        image_demo(predictor, vis_folder, args.path, current_time, args.save_result)
+        save_folder = os.path.join(
+            vis_folder + "@" + time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
+        )
+        image_demo(predictor, save_folder, args.path, current_time, args.save_result)
     elif args.demo == "video" or args.demo == "webcam":
-        imageflow_demo(predictor, vis_folder, current_time, args)
+        imageflow_demo(predictor, save_folder, current_time, args)
 
 
 if __name__ == "__main__":

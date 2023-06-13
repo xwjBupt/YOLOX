@@ -101,7 +101,7 @@ def make_parser():
     parser.add_argument(
         "-c",
         "--ckpt",
-        default=None,  # "/ai/mnt/code/YOLOX/yolox/models/yolox.pth",
+        default="/ai/mnt/code/YOLOX/yolox/models/yolox.pth",
         type=str,
         help="checkpoint file",
     )

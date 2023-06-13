@@ -21,7 +21,7 @@ class Exp(MyExp):
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30-NoPretrain"
+        self.exp_name = "YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30"
         self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
         self.num_classes = 1
 

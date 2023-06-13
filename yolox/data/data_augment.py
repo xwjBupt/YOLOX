@@ -8,7 +8,7 @@ Dataset classes.
 The data augmentation procedures were interpreted from @weiliu89's SSD paper
 http://arxiv.org/abs/1512.02325
 """
-
+import albumentations as A
 import math
 import random
 
@@ -167,10 +167,18 @@ class TrainTransform:
         self.max_labels = max_labels
         self.flip_prob = flip_prob
         self.hsv_prob = hsv_prob
+        # self.RandomResizedCrop = A.Compose(
+        #     [A.augmentations.crops.transforms.RandomResizedCrop(height=640, width=640)],
+        #     bbox_params=A.BboxParams(format="coco", min_visibility=0.3),
+        # )
 
     def __call__(self, image, targets, input_dim):
         boxes = targets[:, :4].copy()
         labels = targets[:, 4].copy()
+        # transformed = self.RandomResizedCrop(image=image, bboxes=boxes)
+        # image = transformed["image"]
+        # boxes = transformed["bboxes"]
+        # image = transformed["image"]
         if len(boxes) == 0:
             targets = np.zeros((self.max_labels, 5), dtype=np.float32)
             image, r_o = preproc(image, input_dim)

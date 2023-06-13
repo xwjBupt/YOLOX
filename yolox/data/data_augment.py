@@ -28,7 +28,9 @@ def augment_hsv(img, hgain=5, sgain=30, vgain=30):
     img_hsv[..., 1] = np.clip(img_hsv[..., 1] + hsv_augs[1], 0, 255)
     img_hsv[..., 2] = np.clip(img_hsv[..., 2] + hsv_augs[2], 0, 255)
 
-    cv2.cvtColor(img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR, dst=img)  # no return needed
+    cv2.cvtColor(
+        img_hsv.astype(img.dtype), cv2.COLOR_HSV2BGR, dst=img
+    )  # no return needed
 
 
 def get_aug_params(value, center=0):
@@ -39,7 +41,9 @@ def get_aug_params(value, center=0):
     else:
         raise ValueError(
             "Affine params should be either a sequence containing two values\
-             or single float values. Got {}".format(value)
+             or single float values. Got {}".format(
+                value
+            )
         )
 
 
@@ -237,7 +241,11 @@ class ValTransform:
         img, _ = preproc(img, input_size, self.swap)
         if self.legacy:
             img = img[::-1, :, :].copy()
+            img -= np.array(
+                [144.5754766729963, 144.5754766729963, 144.5754766729963]
+            ).reshape(3, 1, 1)
+            img /= np.array(
+                [55.8710224233549, 55.8710224233549, 55.8710224233549]
+            ).reshape(3, 1, 1)
             img /= 255.0
-            img -= np.array([0.485, 0.456, 0.406]).reshape(3, 1, 1)
-            img /= np.array([0.229, 0.224, 0.225]).reshape(3, 1, 1)
         return img, np.zeros((1, 5))

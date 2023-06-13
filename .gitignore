@@ -230,4 +230,5 @@ Thumbs.db
 output_runs/*
 tools/artifacts/*
 tools/wandb/*
-wandb/*
+*artifacts*
+*wandb*

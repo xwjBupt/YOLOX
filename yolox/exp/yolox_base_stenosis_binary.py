@@ -16,7 +16,7 @@ class Exp(MyExp):
         self.test_size = (1024, 1024)
         self.multiscale_range = 8
         # Define yourself dataset path
-        self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/"
+        self.data_dir = "/ai/mnt/data/stenosis/selected_small/Binary/FOLD0/"
         self.train_ann = "train_binary.json"
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"

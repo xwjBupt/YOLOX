@@ -38,7 +38,7 @@ class STENOSISDataset(CacheDataset):
 
     def __init__(
         self,
-        data_dir="/ai/mnt/data/stenosis/selected/Binary/FOLD0",
+        data_dir="/ai/mnt/data/stenosis/selected_small/Binary/FOLD0",
         fold="FOLD0",
         json_file="train_binary.json",
         name="train",

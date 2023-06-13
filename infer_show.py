@@ -240,8 +240,6 @@ def image_demo(predictor, save_folder, path, current_time, save_result):
             train_index += 1
         else:
             phase = "val"
-        if train_index > 200:
-            continue
         outputs, img_info = predictor.inference(image_name)
         result_image = predictor.visual(outputs[0], img_info, predictor.confthre)
         gt_name = image_name[:-4] + ".json"

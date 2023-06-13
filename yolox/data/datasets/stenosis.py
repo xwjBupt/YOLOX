@@ -98,10 +98,16 @@ class STENOSISDataset(CacheDataset):
         annotations = self.coco.loadAnns(anno_ids)
         objs = []
         for obj in annotations:
-            x1 = np.max((0, obj["bbox"][0]))
-            y1 = np.max((0, obj["bbox"][1]))
-            x2 = np.min((width, x1 + np.max((0, obj["bbox"][2]))))
-            y2 = np.min((height, y1 + np.max((0, obj["bbox"][3]))))
+            box_height_expand = max(0.2 * abs(obj["bbox"][1] - obj["bbox"][3]), 30)
+            box_width_expand = max(0.2 * abs(obj["bbox"][0] - obj["bbox"][2]), 30)
+            x1 = np.max((0, obj["bbox"][0] - box_width_expand // 2))
+            y1 = np.max((0, obj["bbox"][1] - box_height_expand // 2))
+            x2 = np.min(
+                (width, x1 + box_width_expand // 2 + np.max((0, obj["bbox"][2])))
+            )
+            y2 = np.min(
+                (height, y1 + box_height_expand // 2 + np.max((0, obj["bbox"][3])))
+            )
             if obj["area"] > 0 and x2 >= x1 and y2 >= y1:
                 obj["clean_bbox"] = [x1, y1, x2, y2]
                 objs.append(obj)

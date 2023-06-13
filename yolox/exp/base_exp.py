@@ -19,7 +19,7 @@ class BaseExp(metaclass=ABCMeta):
     def __init__(self):
         self.seed = None
         self.output_dir = "./YOLOX_outputs"
-        self.print_interval = 400
+        self.print_interval = 200
         self.eval_interval = 10
         self.dataset = None
 

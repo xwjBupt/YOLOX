@@ -202,8 +202,7 @@ if __name__ == "__main__":
             commit_info=exp.exp_name,
             time_stamp=timestamp,
         )
-    else:
-        os.environ["WANDB_MODE"] = "dryrun"
+
     launch(
         main,
         num_gpu,

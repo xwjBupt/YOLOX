@@ -160,9 +160,8 @@ class Predictor(object):
             img = img.cuda()
             if self.fp16:
                 img = img.half()  # to FP16
-
+        # t0 = time.time()
         with torch.no_grad():
-            t0 = time.time()
             outputs = self.model(img)
             if self.decoder is not None:
                 outputs = self.decoder(outputs, dtype=outputs.type())
@@ -173,7 +172,7 @@ class Predictor(object):
                 self.nmsthre,
                 class_agnostic=True,
             )
-            logger.info("Infer time: {:.4f}s".format(time.time() - t0))
+        # logger.info("Infer time: {:.4f}s".format(time.time() - t0))
         return outputs, img_info
 
     def visual(self, output, img_info, cls_conf=0.35):
@@ -204,13 +203,17 @@ def image_demo(predictor, vis_folder, path, current_time, save_result):
     save_folder = os.path.join(
         vis_folder + "@" + time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
     )
+    train_index = 0
     os.makedirs(save_folder, exist_ok=True)
     for image_name in tqdm(files):
-        outputs, img_info = predictor.inference(image_name)
         if "train" in image_name:
             phase = "train"
+            train_index += 1
         else:
             phase = "val"
+        if train_index > 200:
+            continue
+        outputs, img_info = predictor.inference(image_name)
         result_image = predictor.visual(outputs[0], img_info, predictor.confthre)
         save_file_name = os.path.join(
             save_folder, phase + "@" + os.path.basename(image_name)

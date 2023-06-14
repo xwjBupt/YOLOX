@@ -22,7 +22,6 @@ from yolox.utils import configure_module, configure_nccl, configure_omp, get_num
 def git_commit(
     work_dir,
     commit_info,
-    time_stamp,
     levels=10,
     postfixs=[".py", ".sh"],
     debug=False,
@@ -51,7 +50,6 @@ def git_commit(
 
     commit_tag = (
         commit_info
-        + "@{}".format(time_stamp)
         + "\n"
         + "COMMIT BRANCH >>> "
         + branch
@@ -184,6 +182,7 @@ if __name__ == "__main__":
     exp = get_exp(args.exp_file, args.name)
     exp.merge(args.opts)
     check_exp_value(exp)
+    exp.exp_name = timestamp + "@" + exp.exp_name
     if not args.experiment_name:
         args.experiment_name = exp.exp_name
     if args.no_debug:
@@ -192,7 +191,6 @@ if __name__ == "__main__":
             commit_info=exp.exp_name,
             time_stamp=timestamp,
         )
-    exp.exp_name = timestamp + "@" + exp.exp_name
     num_gpu = get_num_devices() if args.devices is None else args.devices
     assert num_gpu <= get_num_devices()
 

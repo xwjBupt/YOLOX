@@ -58,7 +58,7 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
-        self.file_name = os.path.join(exp.output_dir)
+        self.file_name = os.path.join(exp.exp_name)
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
         shutil.copy(args.exp_file, self.file_name)

@@ -323,6 +323,10 @@ class COCOEvaluator:
                 logger.warning("Use standard COCOeval.")
 
             cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
+            # cocoEval.params.maxDets = [1, 5, 50]
+            cocoEval.params.iouThrs = np.linspace(
+                0.1, 0.95, int(np.round((0.95 - 0.1) / 0.05)) + 1, endpoint=True
+            )
             cocoEval.evaluate()
             cocoEval.accumulate()
             redirect_string = io.StringIO()

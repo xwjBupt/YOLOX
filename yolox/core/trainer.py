@@ -5,7 +5,7 @@ import datetime
 import os
 import time
 from loguru import logger
-
+import shutil
 import torch
 from torch.nn.parallel import DistributedDataParallel as DDP
 from torch.utils.tensorboard import SummaryWriter
@@ -58,11 +58,10 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
-        self.file_name = os.path.join(exp.output_dir, args.experiment_name)
-
+        self.file_name = os.path.join(exp.output_dir)
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
-
+        shutil.copy(args.exp_file, self.file_name)
         setup_logger(
             self.file_name,
             distributed_rank=self.rank,

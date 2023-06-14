@@ -52,14 +52,14 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/yolox/exp/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-ALL-NMS0.35-V1024/YOLOX-BaseRun-ALL-NMS0.35-V1024/yolox_base_stenosis_binary.py",
         type=str,
         help="please input your experiment description file",
     )
     parser.add_argument(
         "-c",
         "--ckpt",
-        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30-NoPretrain/YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30-NoPretrain/best_ckpt.pth",
+        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-ALL-NMS0.35-V1024/YOLOX-BaseRun-ALL-NMS0.35-V1024/best_ckpt.pth",
         type=str,
         help="ckpt for eval",
     )

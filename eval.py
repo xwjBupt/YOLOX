@@ -7,7 +7,7 @@ import os
 import random
 import warnings
 from loguru import logger
-
+import glob
 import torch
 import torch.backends.cudnn as cudnn
 from torch.nn.parallel import DistributedDataParallel as DDP
@@ -52,14 +52,14 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-ALL-NMS0.35-V1024/YOLOX-BaseRun-ALL-NMS0.35-V1024/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30-NoPretrain/YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30-NoPretrain/yolox_base_stenosis_binary.py",
         type=str,
         help="please input your experiment description file",
     )
     parser.add_argument(
         "-c",
         "--ckpt",
-        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-ALL-NMS0.35-V1024/YOLOX-BaseRun-ALL-NMS0.35-V1024/best_ckpt.pth",
+        default=None,
         type=str,
         help="ckpt for eval",
     )
@@ -136,7 +136,7 @@ def main(exp, args, num_gpu):
 
     rank = get_local_rank()
 
-    file_name = os.path.join(exp.output_dir, args.experiment_name)
+    file_name = os.path.dirname(args.exp_file)
 
     if rank == 0:
         os.makedirs(file_name, exist_ok=True)
@@ -150,7 +150,10 @@ def main(exp, args, num_gpu):
         exp.nmsthre = args.nms
     if args.tsize is not None:
         exp.test_size = (args.tsize, args.tsize)
-
+    if args.ckpt is None:
+        args.ckpt = glob.glob(
+            os.path.join(os.path.dirname(args.exp_file), "*best*.pth")
+        )[0]
     model = exp.get_model()
     logger.info("Model Summary: {}".format(get_model_info(model, exp.test_size)))
     logger.info("Model Structure:\n{}".format(str(model)))

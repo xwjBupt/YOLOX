@@ -184,10 +184,15 @@ if __name__ == "__main__":
     exp = get_exp(args.exp_file, args.name)
     exp.merge(args.opts)
     check_exp_value(exp)
-
     if not args.experiment_name:
         args.experiment_name = exp.exp_name
-
+    if args.no_debug:
+        args.gitinfo = git_commit(
+            work_dir="/ai/mnt/code/YOLOX",
+            commit_info=exp.exp_name,
+            time_stamp=timestamp,
+        )
+    exp.exp_name = timestamp + "@" + exp.exp_name
     num_gpu = get_num_devices() if args.devices is None else args.devices
     assert num_gpu <= get_num_devices()
 
@@ -195,13 +200,7 @@ if __name__ == "__main__":
         exp.dataset = exp.get_dataset(cache=True, cache_type=args.cache)
 
     dist_url = "auto" if args.dist_url is None else args.dist_url
-    setproctitle.setproctitle(exp.exp_name + "@" + timestamp)
-    if args.no_debug:
-        args.gitinfo = git_commit(
-            work_dir="/ai/mnt/code/YOLOX",
-            commit_info=exp.exp_name,
-            time_stamp=timestamp,
-        )
+    setproctitle.setproctitle(exp.exp_name)
 
     launch(
         main,

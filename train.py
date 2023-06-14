@@ -187,9 +187,7 @@ if __name__ == "__main__":
         args.experiment_name = exp.exp_name
     if args.no_debug:
         args.gitinfo = git_commit(
-            work_dir="/ai/mnt/code/YOLOX",
-            commit_info=exp.exp_name,
-            time_stamp=timestamp,
+            work_dir="/ai/mnt/code/YOLOX", commit_info=exp.exp_name
         )
     num_gpu = get_num_devices() if args.devices is None else args.devices
     assert num_gpu <= get_num_devices()

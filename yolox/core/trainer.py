@@ -61,7 +61,13 @@ class Trainer:
         self.file_name = os.path.join("/ai/mnt/code/YOLOX/output_runs", exp.exp_name)
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
-        shutil.copy(args.exp_file, self.file_name)
+        if not os.path.exists(
+            os.path.join(self.file_name, os.path.basename(args.exp_file))
+        ):
+            shutil.copyfile(
+                args.exp_file,
+                os.path.join(self.file_name, os.path.basename(args.exp_file)),
+            )
         setup_logger(
             self.file_name,
             distributed_rank=self.rank,

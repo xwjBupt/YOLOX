@@ -175,9 +175,9 @@ class TrainTransform:
     def __call__(self, image, targets, input_dim):
         boxes = targets[:, :4].copy()
         labels = targets[:, 4].copy()
-        transformed = self.RandomSizedBBoxSafeCrop(image=image, bboxes=boxes)
-        t_image = transformed["image"]
-        t_boxes = transformed["bboxes"]
+        # transformed = self.RandomSizedBBoxSafeCrop(image=image, bboxes=boxes)
+        # t_image = transformed["image"]
+        # t_boxes = transformed["bboxes"]
         if len(boxes) == 0:
             targets = np.zeros((self.max_labels, 5), dtype=np.float32)
             image, r_o = preproc(image, input_dim)

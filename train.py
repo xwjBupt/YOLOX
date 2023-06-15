@@ -82,14 +82,14 @@ def make_parser():
         type=str,
         help="url used to set up distributed training",
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=3, help="batch size")
+    parser.add_argument("-b", "--batch-size", type=int, default=1, help="batch size")
     parser.add_argument(
         "-d", "--devices", default=0, type=int, help="device for training"
     )
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/yolox/exp/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/main_yolox_base_stenosis_binary.py",
         type=str,
         help="plz input your experiment description file",
     )
@@ -182,6 +182,7 @@ if __name__ == "__main__":
     exp = get_exp(args.exp_file, args.name)
     exp.merge(args.opts)
     check_exp_value(exp)
+    args.batch_size = exp.batch_size
     exp.exp_name = timestamp + "@" + exp.exp_name
     if not args.experiment_name:
         args.experiment_name = exp.exp_name

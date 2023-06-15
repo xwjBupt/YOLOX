@@ -20,7 +20,7 @@ class AssignVisualizer(Trainer):
     def __init__(self, exp, args):
         super().__init__(exp, args)
         self.batch_cnt = 0
-        self.vis_dir = os.path.join(self.file_name, "AssignVisualizer")
+        self.vis_dir = os.path.join(os.path.dirname(args.exp_file), "AssignVisualizer")
         os.makedirs(self.vis_dir, exist_ok=True)
 
     def train_one_iter(self):
@@ -80,7 +80,7 @@ def assign_vis_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-ALL-NMS0.35-V1024/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/06_15-16_32@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5/yolox_base_stenosis_binary.py",
         type=str,
         help="plz input your experiment description file",
     )

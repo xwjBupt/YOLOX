@@ -50,7 +50,7 @@ def make_parser():
     parser.add_argument(
         "-c",
         "--ckpt",
-        default="/ai/mnt/code/YOLOX/output_runs/06_14-11_12@YOLOX-ALL-NMS0.25-V1024-ExBox30-SR8/best_ckpt.pth",
+        default=None,
         type=str,
         help="ckpt for eval",
     )

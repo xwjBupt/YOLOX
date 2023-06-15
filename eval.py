@@ -52,7 +52,7 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/06_14-11_12@YOLOX-ALL-NMS0.25-V1024-ExBox30-SR8/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/06_15-16_32@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5/yolox_base_stenosis_binary.py",
         type=str,
         help="please input your experiment description file",
     )
@@ -228,4 +228,14 @@ if __name__ == "__main__":
         backend=args.dist_backend,
         dist_url=dist_url,
         args=(exp, args, num_gpu),
+    )
+    os.system(
+        "python {} --exp_file {}".format(
+            "/ai/mnt/code/YOLOX/visualize_assign.py", args.exp_file
+        )
+    )
+    os.system(
+        "python {} --exp_file {}".format(
+            "/ai/mnt/code/YOLOX/infer_show.py", args.exp_file
+        )
     )

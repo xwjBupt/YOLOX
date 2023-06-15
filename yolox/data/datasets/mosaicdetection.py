@@ -62,6 +62,12 @@ class MosaicDetection(Dataset):
             format="coco",
             random_rate=0.5,
         ),
+        motion_blur_dict=dict(
+            blur_limit=7, allow_shifted=True, always_apply=False, p=0.15
+        ),
+        zoom_blur_dict=dict(
+            max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.22
+        ),
         enable_mixup=True,
         mosaic_prob=1.0,
         mixup_prob=1.0,
@@ -95,9 +101,23 @@ class MosaicDetection(Dataset):
         self.enable_mixup = enable_mixup
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
+        self.motion_blur_dict = motion_blur_dict
+        self.zoom_blur_dict = zoom_blur_dict
         self.local_rank = get_local_rank()
-        self.RandomSizedBBoxSafeCrop = A.Compose(
+        self.TRANSFORMS = A.Compose(
             [
+                A.MotionBlur(
+                    blur_limit=self.motion_blur_dict.get("blur_limit"),
+                    allow_shifted=self.motion_blur_dict.get("allow_shifted"),
+                    always_apply=self.motion_blur_dict.get("always_apply"),
+                    p=self.motion_blur_dict.get("p"),
+                ),
+                A.ZoomBlur(
+                    max_factor=self.zoom_blur_dict.get("max_factor"),
+                    step_factor=self.zoom_blur_dict.get("step_factor"),
+                    always_apply=self.zoom_blur_dict.get("always_apply"),
+                    p=self.zoom_blur_dict.get("p"),
+                ),
                 A.RandomSizedBBoxSafeCrop(
                     width=self.crop_dict.get("width"),
                     height=self.crop_dict.get("height"),
@@ -135,7 +155,7 @@ class MosaicDetection(Dataset):
                 # _labels: [[xmin, ymin, xmax, ymax, label_ind], ...]
                 if random.random() < self.crop_dict.get("random_rate"):
                     new_boxxes = xyxy2xywh(_labels)
-                    transformed = self.RandomSizedBBoxSafeCrop(
+                    transformed = self.TRANSFORMS(
                         image=img,
                         bboxes=new_boxxes,
                     )

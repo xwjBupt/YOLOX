@@ -33,7 +33,7 @@ class Exp(MyExp):
         self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_256"
         self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
         self.num_classes = 1
-        self.max_epoch = 100
+        self.max_epoch = 200
         self.data_num_workers = 4
         self.eval_interval = 1
         self.print_interval = 150

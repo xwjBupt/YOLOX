@@ -18,9 +18,9 @@ class Exp(MyExp):
         self.crop_dict = dict(
             width=448,
             height=336,
-            erosion_rate=0.2,
-            min_area=128,
-            min_visibility=0.1,
+            erosion_rate=0,
+            min_area=64,
+            min_visibility=0,
             format="coco",
             random_rate=0.5,
         )

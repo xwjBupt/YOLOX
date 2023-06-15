@@ -137,11 +137,13 @@ class MosaicDetection(Dataset):
                     new_boxxes = xyxy2xywh(_labels)
                     transformed = self.RandomSizedBBoxSafeCrop(
                         image=img,
-                        bboxes=_labels,
+                        bboxes=new_boxxes,
                     )
-                    img = transformed["image"]
-                    _labels = transformed["bboxes"]
-                    _labels = xywh2xyxy(np.array(_labels))
+                    _labels_t = transformed["bboxes"]
+                    if len(_labels_t) > 0:
+                        _labels = xywh2xyxy(np.array(transformed["bboxes"]))
+                        img = transformed["image"]
+
                 h0, w0 = img.shape[:2]  # orig hw
                 scale = min(1.0 * input_h / h0, 1.0 * input_w / w0)
                 img = cv2.resize(

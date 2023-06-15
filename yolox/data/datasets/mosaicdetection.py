@@ -6,8 +6,8 @@ import random
 
 import cv2
 import numpy as np
-
-from yolox.utils import adjust_box_anns, get_local_rank
+import albumentations as A
+from yolox.utils import adjust_box_anns, get_local_rank, xyxy2xywh, xywh2xyxy
 
 from ..data_augment import random_affine
 from .datasets_wrapper import Dataset
@@ -29,7 +29,12 @@ def get_mosaic_coordinate(mosaic_image, mosaic_index, xc, yc, w, h, input_h, inp
         small_coord = w - (x2 - x1), 0, w, min(y2 - y1, h)
     # index2 to bottom right part of image
     elif mosaic_index == 3:
-        x1, y1, x2, y2 = xc, yc, min(xc + w, input_w * 2), min(input_h * 2, yc + h)  # noqa
+        x1, y1, x2, y2 = (
+            xc,
+            yc,
+            min(xc + w, input_w * 2),
+            min(input_h * 2, yc + h),
+        )  # noqa
         small_coord = 0, 0, min(w, x2 - x1), min(y2 - y1, h)
     return (x1, y1, x2, y2), small_coord
 
@@ -38,10 +43,29 @@ class MosaicDetection(Dataset):
     """Detection dataset wrapper that performs mixup for normal dataset."""
 
     def __init__(
-        self, dataset, img_size, mosaic=True, preproc=None,
-        degrees=10.0, translate=0.1, mosaic_scale=(0.5, 1.5),
-        mixup_scale=(0.5, 1.5), shear=2.0, enable_mixup=True,
-        mosaic_prob=1.0, mixup_prob=1.0, *args
+        self,
+        dataset,
+        img_size,
+        mosaic=True,
+        preproc=None,
+        degrees=10.0,
+        translate=0.1,
+        mosaic_scale=(0.5, 1.5),
+        mixup_scale=(0.5, 1.5),
+        shear=2.0,
+        crop_dict=dict(
+            width=448,
+            height=336,
+            erosion_rate=0.2,
+            min_area=128,
+            min_visibility=0.1,
+            format="coco",
+            random_rate=0.5,
+        ),
+        enable_mixup=True,
+        mosaic_prob=1.0,
+        mixup_prob=1.0,
+        *args
     ):
         """
 
@@ -64,6 +88,7 @@ class MosaicDetection(Dataset):
         self.degrees = degrees
         self.translate = translate
         self.scale = mosaic_scale
+        self.crop_dict = crop_dict
         self.shear = shear
         self.mixup_scale = mixup_scale
         self.enable_mosaic = mosaic
@@ -71,6 +96,20 @@ class MosaicDetection(Dataset):
         self.mosaic_prob = mosaic_prob
         self.mixup_prob = mixup_prob
         self.local_rank = get_local_rank()
+        self.RandomSizedBBoxSafeCrop = A.Compose(
+            [
+                A.RandomSizedBBoxSafeCrop(
+                    width=self.crop_dict.get("width"),
+                    height=self.crop_dict.get("height"),
+                    erosion_rate=self.crop_dict.get("erosion_rate"),
+                ),
+            ],
+            bbox_params=A.BboxParams(
+                format=self.crop_dict.get("format"),
+                min_area=self.crop_dict.get("min_area"),
+                min_visibility=self.crop_dict.get("min_visibility"),
+            ),
+        )
 
     def __len__(self):
         return len(self._dataset)
@@ -87,22 +126,43 @@ class MosaicDetection(Dataset):
             xc = int(random.uniform(0.5 * input_w, 1.5 * input_w))
 
             # 3 additional image indices
-            indices = [idx] + [random.randint(0, len(self._dataset) - 1) for _ in range(3)]
+            indices = [idx] + [
+                random.randint(0, len(self._dataset) - 1) for _ in range(3)
+            ]
 
             for i_mosaic, index in enumerate(indices):
                 img, _labels, _, img_id = self._dataset.pull_item(index)
+                # _labels: [[xmin, ymin, xmax, ymax, label_ind], ...]
+                if random.random() < self.crop_dict.get("random_rate"):
+                    new_boxxes = xyxy2xywh(_labels)
+                    transformed = self.RandomSizedBBoxSafeCrop(
+                        image=img,
+                        bboxes=_labels,
+                    )
+                    img = transformed["image"]
+                    _labels = transformed["bboxes"]
+                    _labels = xywh2xyxy(np.array(_labels))
                 h0, w0 = img.shape[:2]  # orig hw
-                scale = min(1. * input_h / h0, 1. * input_w / w0)
+                scale = min(1.0 * input_h / h0, 1.0 * input_w / w0)
                 img = cv2.resize(
-                    img, (int(w0 * scale), int(h0 * scale)), interpolation=cv2.INTER_LINEAR
+                    img,
+                    (int(w0 * scale), int(h0 * scale)),
+                    interpolation=cv2.INTER_LINEAR,
                 )
                 # generate output mosaic image
                 (h, w, c) = img.shape[:3]
                 if i_mosaic == 0:
-                    mosaic_img = np.full((input_h * 2, input_w * 2, c), 114, dtype=np.uint8)
+                    mosaic_img = np.full(
+                        (input_h * 2, input_w * 2, c), 114, dtype=np.uint8
+                    )
 
                 # suffix l means large image, while s means small image in mosaic aug.
-                (l_x1, l_y1, l_x2, l_y2), (s_x1, s_y1, s_x2, s_y2) = get_mosaic_coordinate(
+                (l_x1, l_y1, l_x2, l_y2), (
+                    s_x1,
+                    s_y1,
+                    s_x2,
+                    s_y2,
+                ) = get_mosaic_coordinate(
                     mosaic_img, i_mosaic, xc, yc, w, h, input_h, input_w
                 )
 
@@ -143,8 +203,12 @@ class MosaicDetection(Dataset):
                 and not len(mosaic_labels) == 0
                 and random.random() < self.mixup_prob
             ):
-                mosaic_img, mosaic_labels = self.mixup(mosaic_img, mosaic_labels, self.input_dim)
-            mix_img, padded_labels = self.preproc(mosaic_img, mosaic_labels, self.input_dim)
+                mosaic_img, mosaic_labels = self.mixup(
+                    mosaic_img, mosaic_labels, self.input_dim
+                )
+            mix_img, padded_labels = self.preproc(
+                mosaic_img, mosaic_labels, self.input_dim
+            )
             img_info = (mix_img.shape[1], mix_img.shape[0])
 
             # -----------------------------------------------------------------
@@ -206,7 +270,7 @@ class MosaicDetection(Dataset):
         if padded_img.shape[1] > target_w:
             x_offset = random.randint(0, padded_img.shape[1] - target_w - 1)
         padded_cropped_img = padded_img[
-            y_offset: y_offset + target_h, x_offset: x_offset + target_w
+            y_offset : y_offset + target_h, x_offset : x_offset + target_w
         ]
 
         cp_bboxes_origin_np = adjust_box_anns(

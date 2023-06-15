@@ -67,6 +67,15 @@ class Exp(BaseExp):
         self.mixup_scale = (0.5, 1.5)
         # shear angle range, for example, if set to 2, the true range is (-2, 2)
         self.shear = 2.0
+        self.crop_dict = dict(
+            width=448,
+            height=336,
+            erosion_rate=0.2,
+            min_area=128,
+            min_visibility=0.1,
+            format="coco",
+            random_rate=0.5,
+        )
 
         # --------------  training config --------------------- #
         # epoch number used for warmup

@@ -163,21 +163,28 @@ def preproc(img, input_size, swap=(2, 0, 1)):
 
 
 class TrainTransform:
-    def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0):
+    def __init__(self, max_labels=50, flip_prob=0.5, hsv_prob=1.0, category_ids=[0]):
         self.max_labels = max_labels
         self.flip_prob = flip_prob
         self.hsv_prob = hsv_prob
-        self.RandomSizedBBoxSafeCrop = A.Compose(
-            [A.RandomSizedBBoxSafeCrop(width=448, height=336, erosion_rate=0.2)],
-            bbox_params=A.BboxParams(format="coco", label_fields=["category_ids"]),
-        )
+        self.category_ids = category_ids
+        # self.transform = A.Compose(
+        #     [
+        #         A.HorizontalFlip(p=0.5),
+        #         A.RandomBrightnessContrast(p=0.2),
+        #         A.RandomSizedBBoxSafeCrop(width=448, height=336, erosion_rate=0.2),
+        #     ],
+        #     bbox_params=A.BboxParams(
+        #         format="coco",
+        #         min_area=384,
+        #         min_visibility=0.1,
+        #         label_fields=["category_ids"],
+        #     ),
+        # )
 
     def __call__(self, image, targets, input_dim):
         boxes = targets[:, :4].copy()
         labels = targets[:, 4].copy()
-        # transformed = self.RandomSizedBBoxSafeCrop(image=image, bboxes=boxes)
-        # t_image = transformed["image"]
-        # t_boxes = transformed["bboxes"]
         if len(boxes) == 0:
             targets = np.zeros((self.max_labels, 5), dtype=np.float32)
             image, r_o = preproc(image, input_dim)

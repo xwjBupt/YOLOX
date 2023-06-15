@@ -80,7 +80,7 @@ def assign_vis_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-ALL-NMS0.35-V1024/yolox_base_stenosis_binary.py",
         type=str,
         help="plz input your experiment description file",
     )

@@ -52,7 +52,7 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30-NoPretrain/YOLOX-BaseRun-SMALL-NMS0.35-V1024-ExBox30-NoPretrain/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/06_14-11_12@YOLOX-ALL-NMS0.25-V1024-ExBox30-SR8/yolox_base_stenosis_binary.py",
         type=str,
         help="please input your experiment description file",
     )

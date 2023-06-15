@@ -167,18 +167,17 @@ class TrainTransform:
         self.max_labels = max_labels
         self.flip_prob = flip_prob
         self.hsv_prob = hsv_prob
-        # self.RandomResizedCrop = A.Compose(
-        #     [A.augmentations.crops.transforms.RandomResizedCrop(height=640, width=640)],
-        #     bbox_params=A.BboxParams(format="coco", min_visibility=0.3),
-        # )
+        self.RandomSizedBBoxSafeCrop = A.Compose(
+            [A.RandomSizedBBoxSafeCrop(width=448, height=336, erosion_rate=0.2)],
+            bbox_params=A.BboxParams(format="coco", label_fields=["category_ids"]),
+        )
 
     def __call__(self, image, targets, input_dim):
         boxes = targets[:, :4].copy()
         labels = targets[:, 4].copy()
-        # transformed = self.RandomResizedCrop(image=image, bboxes=boxes)
-        # image = transformed["image"]
-        # boxes = transformed["bboxes"]
-        # image = transformed["image"]
+        transformed = self.RandomSizedBBoxSafeCrop(image=image, bboxes=boxes)
+        t_image = transformed["image"]
+        t_boxes = transformed["bboxes"]
         if len(boxes) == 0:
             targets = np.zeros((self.max_labels, 5), dtype=np.float32)
             image, r_o = preproc(image, input_dim)

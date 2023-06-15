@@ -43,14 +43,14 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/yolox/exp/yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/06_14-11_12@YOLOX-ALL-NMS0.25-V1024-ExBox30-SR8/yolox_base_stenosis_binary.py",
         type=str,
         help="please input your experiment description file",
     )
     parser.add_argument(
         "-c",
         "--ckpt",
-        default="/ai/mnt/code/YOLOX/output_runs/YOLOX-BaseRun-ALL-NMS0.35-V1024/YOLOX-BaseRun-ALL-NMS0.35-V1024/best_ckpt.pth",
+        default="/ai/mnt/code/YOLOX/output_runs/06_14-11_12@YOLOX-ALL-NMS0.25-V1024-ExBox30-SR8/best_ckpt.pth",
         type=str,
         help="ckpt for eval",
     )
@@ -249,10 +249,10 @@ def image_demo(predictor, save_folder, path, current_time, save_result):
             save_folder, phase + "@" + os.path.basename(image_name)
         )
         cv2.imwrite(save_file_name, result_image)
-        ch = cv2.waitKey(0)
+        # ch = cv2.waitKey(0)
 
-        if ch == 27 or ch == ord("q") or ch == ord("Q"):
-            break
+        # if ch == 27 or ch == ord("q") or ch == ord("Q"):
+        #     break
     logger.info("Saving detection result in {}".format(save_folder))
 
 
@@ -295,13 +295,12 @@ def main(exp, args):
     if not args.experiment_name:
         args.experiment_name = exp.exp_name
 
-    file_name = os.path.join(exp.output_dir, args.experiment_name)
+    file_name = os.path.dirname(args.exp_file)
     os.makedirs(file_name, exist_ok=True)
 
-    vis_folder = None
-    if args.save_result:
-        vis_folder = os.path.join(file_name, "vis_res")
-        os.makedirs(vis_folder, exist_ok=True)
+    # vis_folder = None
+    vis_folder = os.path.join(file_name, "vis_res")
+    # os.makedirs(vis_folder, exist_ok=True)
 
     if args.trt:
         args.device = "gpu"
@@ -367,6 +366,7 @@ def main(exp, args):
         save_folder = os.path.join(
             vis_folder + "@" + time.strftime("%Y_%m_%d_%H_%M_%S", current_time)
         )
+        os.makedirs(save_folder, exist_ok=True)
         image_demo(predictor, save_folder, args.path, current_time, args.save_result)
     elif args.demo == "video" or args.demo == "webcam":
         imageflow_demo(predictor, save_folder, current_time, args)

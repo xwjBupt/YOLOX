@@ -106,6 +106,11 @@ class MosaicDetection(Dataset):
         self.local_rank = get_local_rank()
         self.TRANSFORMS = A.Compose(
             [
+                A.RandomSizedBBoxSafeCrop(
+                    width=self.crop_dict.get("width"),
+                    height=self.crop_dict.get("height"),
+                    erosion_rate=self.crop_dict.get("erosion_rate"),
+                ),
                 A.MotionBlur(
                     blur_limit=self.motion_blur_dict.get("blur_limit"),
                     allow_shifted=self.motion_blur_dict.get("allow_shifted"),
@@ -117,11 +122,6 @@ class MosaicDetection(Dataset):
                     step_factor=self.zoom_blur_dict.get("step_factor"),
                     always_apply=self.zoom_blur_dict.get("always_apply"),
                     p=self.zoom_blur_dict.get("p"),
-                ),
-                A.RandomSizedBBoxSafeCrop(
-                    width=self.crop_dict.get("width"),
-                    height=self.crop_dict.get("height"),
-                    erosion_rate=self.crop_dict.get("erosion_rate"),
                 ),
             ],
             bbox_params=A.BboxParams(

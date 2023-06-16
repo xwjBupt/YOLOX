@@ -16,8 +16,8 @@ class Exp(MyExp):
         self.test_size = (1024, 1024)
         self.multiscale_range = 8
         self.crop_dict = dict(
-            width=128,
-            height=128,
+            width=256,
+            height=256,
             erosion_rate=0,
             min_area=64,
             min_visibility=0,
@@ -36,7 +36,7 @@ class Exp(MyExp):
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_128-ZOOM-MOTION"
+        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_256-ZOOM-MOTION"
         self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
         self.num_classes = 1
         self.max_epoch = 100

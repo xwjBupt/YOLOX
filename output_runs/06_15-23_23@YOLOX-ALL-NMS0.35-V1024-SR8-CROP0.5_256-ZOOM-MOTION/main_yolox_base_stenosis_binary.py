@@ -16,8 +16,8 @@ class Exp(MyExp):
         self.test_size = (1024, 1024)
         self.multiscale_range = 8
         self.crop_dict = dict(
-            width=128,
-            height=128,
+            width=256,
+            height=256,
             erosion_rate=0,
             min_area=64,
             min_visibility=0,
@@ -25,10 +25,10 @@ class Exp(MyExp):
             random_rate=0.5,
         )
         self.zoom_blur_dict = dict(
-            blur_limit=7, allow_shifted=True, always_apply=False, p=0.15
+            blur_limit=7, allow_shifted=True, always_apply=False, p=0
         )
         self.motion_blur_dict = dict(
-            max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.2
+            max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0
         )
         # Define yourself dataset path
         self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/"
@@ -36,7 +36,7 @@ class Exp(MyExp):
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_128-ZOOM-MOTION"
+        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_256-ZOOM-MOTION"
         self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
         self.num_classes = 1
         self.max_epoch = 100

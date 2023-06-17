@@ -341,6 +341,14 @@ class COCOEvaluator:
             if self.per_class_AR:
                 AR_table = per_class_AR_table(cocoEval, class_names=cat_names)
                 info += "per class AR:\n" + AR_table + "\n"
-            return cocoEval.stats[0], cocoEval.stats[1], info
+            return (
+                cocoEval.stats[0],
+                cocoEval.stats[1],
+                cocoEval.stats[-2],
+                cocoEval.stats[-3],
+                cocoEval.stats[-4],
+                cocoEval.stats[-5],
+                info,
+            )
         else:
             return 0, 0, info

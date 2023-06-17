@@ -342,7 +342,15 @@ class Trainer:
                 evalmodel = evalmodel.module
 
         with adjust_status(evalmodel, training=False):
-            (ap50_95, ap50, summary), predictions = self.exp.eval(
+            (
+                ap50_95,
+                ap50,
+                ap10,
+                ap20,
+                ap30,
+                ap40,
+                summary,
+            ), predictions = self.exp.eval(
                 evalmodel, self.evaluator, self.is_distributed, return_outputs=True
             )
 
@@ -353,11 +361,19 @@ class Trainer:
             if self.args.logger == "tensorboard":
                 self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
                 self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCOAP10", ap10, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCOAP20", ap20, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCOAP30", ap30, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCOAP40", ap40, self.epoch + 1)
             if self.args.logger == "wandb":
                 self.wandb_logger.log_metrics(
                     {
                         "val/COCOAP50": ap50,
                         "val/COCOAP50_95": ap50_95,
+                        "val/COCOAP10": ap10,
+                        "val/COCOAP20": ap20,
+                        "val/COCOAP30": ap30,
+                        "val/COCOAP40": ap40,
                         "train/epoch": self.epoch + 1,
                     }
                 )

@@ -468,8 +468,8 @@ class YOLOXHead(nn.Module):
             + loss_obj
             + loss_cls
             + loss_l1
-            + focal_obj
-            + focal_cls
+            + focal_obj * reg_weight
+            + focal_cls * reg_weight
         )
 
         return (

@@ -478,6 +478,8 @@ class YOLOXHead(nn.Module):
             loss_obj,
             loss_cls,
             loss_l1,
+            focal_obj * reg_weight,
+            focal_cls * reg_weight,
             num_fg / max(num_gts, 1),
         )
 

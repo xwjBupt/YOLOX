@@ -25,21 +25,25 @@ class Exp(MyExp):
             random_rate=0.5,
         )
         self.zoom_blur_dict = dict(
-            blur_limit=7, allow_shifted=True, always_apply=False, p=0.15
+            blur_limit=7, allow_shifted=True, always_apply=False, p=0.35
         )
         self.motion_blur_dict = dict(
-            max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.2
+            max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.4
         )
         # Define yourself dataset path
-        self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/"
-        self.train_ann = "train_binary.json"
-        self.val_ann = "val_binary.json"
-        self.test_ann = "val_binary.json"
+        self.data_dir = "/ai/mnt/data/stenosis/selected/Multi/FOLD0/"
+        self.train_ann = "train_multi.json"
+        self.val_ann = "val_multi.json"
+        self.test_ann = "val_multi.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_256-ZOOM-MOTION"
+        self.exp_name = (
+            "YOLOX-ALL#M-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e-3"
+        )
         self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
-        self.num_classes = 1
-        self.max_epoch = 100
+        self.num_classes = 18
+        self.max_epoch = 200
         self.data_num_workers = 4
+        self.batch_size = 2
+        self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150

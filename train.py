@@ -18,6 +18,10 @@ from yolox.core import launch
 from yolox.exp import Exp, check_exp_value, get_exp
 from yolox.utils import configure_module, configure_nccl, configure_omp, get_num_devices
 
+import os
+
+os.environ["CUDA_LAUNCH_BLOCKING"] = "1"
+
 
 def git_commit(
     work_dir,

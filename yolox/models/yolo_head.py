@@ -33,20 +33,20 @@ from .network_blocks import BaseConv, DWConv
 #         logpt = (1 - pt) ** self.gamma * logpt
 #         loss_cls = F.nll_loss(logpt, target.squeeze(1).long(), reduction="none")
 #         return loss_cls
-class BCEFocalLoss(torch.nn.Module):
-    def __init__(self, gamma=2, alpha=0.25, reduction="mean"):
-        super(BCEFocalLoss, self).__init__()
-        self.gamma = gamma
-        self.alpha = alpha
-        self.reduction = reduction
+# class BCEFocalLoss(torch.nn.Module):
+#     def __init__(self, gamma=2, alpha=0.25, reduction="mean"):
+#         super(BCEFocalLoss, self).__init__()
+#         self.gamma = gamma
+#         self.alpha = alpha
+#         self.reduction = reduction
 
-    def forward(self, predict, target):
-        pt = torch.sigmoid(predict)  # sigmoide获取概率
-        # 在原始ce上增加动态权重因子，注意alpha的写法，下面多类时不能这样使用
-        loss = -self.alpha * (1 - pt) ** self.gamma * target * torch.log(pt) - (
-            1 - self.alpha
-        ) * pt**self.gamma * (1 - target) * torch.log(1 - pt)
-        return loss
+#     def forward(self, predict, target):
+#         pt = torch.sigmoid(predict)  # sigmoide获取概率
+#         # 在原始ce上增加动态权重因子，注意alpha的写法，下面多类时不能这样使用
+#         loss = -self.alpha * (1 - pt) ** self.gamma * target * torch.log(pt) - (
+#             1 - self.alpha
+#         ) * pt**self.gamma * (1 - target) * torch.log(1 - pt)
+#         return loss
 
 
 # class FocalLoss(nn.Module):
@@ -180,7 +180,7 @@ class YOLOXHead(nn.Module):
         self.use_l1 = False
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
-        self.focal = BCEFocalLoss(gamma=2)
+        # self.focal = BCEFocalLoss(gamma=2)
         self.iou_loss = IOUloss(reduction="none")
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
@@ -441,19 +441,32 @@ class YOLOXHead(nn.Module):
         loss_iou = (
             self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
         ).sum() / num_fg
+        # loss_obj = (
+        #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
+        # ).sum() / num_fg
+        # loss_cls = (
+        #     self.bcewithlog_loss(
+        #         cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
+        #     )
+        # ).sum() / num_fg
+
         loss_obj = (
             self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
         ).sum() / num_fg
+        pt_obj = torch.exp(-loss_obj)
+        loss_obj_focal = 1 * (1 - pt_obj) ** 2 * loss_obj
         loss_cls = (
             self.bcewithlog_loss(
                 cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
             )
         ).sum() / num_fg
+        pt_cls = torch.exp(-loss_cls)
+        loss_cls_focal = 1 * (1 - pt_cls) ** 2 * loss_cls
 
-        focal_obj = (self.focal(obj_preds.view(-1, 1), obj_targets)).sum() / num_fg
-        focal_cls = (
-            self.focal(cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets)
-        ).sum() / num_fg
+        # focal_obj = (self.focal(obj_preds.view(-1, 1), obj_targets)).sum() / num_fg
+        # focal_cls = (
+        #     self.focal(cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets)
+        # ).sum() / num_fg
 
         if self.use_l1:
             loss_l1 = (
@@ -468,8 +481,8 @@ class YOLOXHead(nn.Module):
             + loss_obj
             + loss_cls
             + loss_l1
-            + focal_obj * reg_weight
-            + focal_cls * reg_weight
+            + loss_obj_focal
+            + loss_cls_focal
         )
 
         return (
@@ -478,8 +491,8 @@ class YOLOXHead(nn.Module):
             loss_obj,
             loss_cls,
             loss_l1,
-            focal_obj * reg_weight,
-            focal_cls * reg_weight,
+            loss_obj_focal,
+            loss_cls_focal,
             num_fg / max(num_gts, 1),
         )
 

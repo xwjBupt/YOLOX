@@ -7,10 +7,10 @@
 
 import copy
 import time
-
+import copy
 import numpy as np
 from pycocotools.cocoeval import COCOeval
-
+import pycocotools.mask as maskUtils
 from .jit_ops import FastCOCOEvalOp
 
 
@@ -58,7 +58,8 @@ class COCOeval_opt(COCOeval):
         catIds = p.catIds if p.useCats else [-1]
 
         if p.iouType == "segm" or p.iouType == "bbox":
-            computeIoU = self.computeIoU
+            # computeIoU = self.computeIoU
+            computeIoU = self.cin_compute_iou
         elif p.iouType == "keypoints":
             computeIoU = self.computeOks
         self.ious = {
@@ -236,6 +237,108 @@ class COCOeval_opt(COCOeval):
         elif iouType == "keypoints":
             summarize = _summarizeKps
         self.stats = summarize()
+
+    def cin_compute_iou(self, imgId, catId):
+        p = self.params
+        if p.useCats:
+            gt = self._gts[imgId, catId]
+            dt = self._dts[imgId, catId]
+        else:
+            gt = [_ for cId in p.catIds for _ in self._gts[imgId, cId]]
+            dt = [_ for cId in p.catIds for _ in self._dts[imgId, cId]]
+        if len(gt) == 0 and len(dt) == 0:
+            return []
+        inds = np.argsort([-d["score"] for d in dt], kind="mergesort")
+        dt = [dt[i] for i in inds]
+        if len(dt) > p.maxDets[-1]:
+            dt = dt[0 : p.maxDets[-1]]
+
+        if p.iouType == "segm":
+            g = [g["segmentation"] for g in gt]
+            d = [d["segmentation"] for d in dt]
+        elif p.iouType == "bbox":
+            g = [g["bbox"] for g in gt]
+            d = [d["bbox"] for d in dt]
+        else:
+            raise Exception("unknown iouType for iou computation")
+
+        # compute iou between each dt and gt region
+        iscrowd = [int(o["iscrowd"]) for o in gt]
+        ious = maskUtils.iou(d, g, iscrowd)
+        ious = self.update_ious(d, g, ious)
+        return ious
+
+    def update_ious(self, d, g, ious):
+        raw_ious = copy.deepcopy(ious)
+        for dindex, di in enumerate(d):
+            for gindex, gi in enumerate(g):
+                dx, dy, dw, dh = di
+                gx, gy, gw, gh = gi
+                g_center_x = gx + gw / 2
+                g_center_y = gy + gh / 2
+                d_center_x = dx + dw / 2
+                d_center_y = dy + dh / 2
+
+                bing = (
+                    g_center_x > dx
+                    and g_center_x < (dx + dw)
+                    and g_center_y > dy
+                    and g_center_y < (dy + dh)
+                )
+                ginb = (
+                    d_center_x > gx
+                    and d_center_x < (gx + gw)
+                    and d_center_y > gy
+                    and d_center_y < (gy + gh)
+                )
+                gcontainb = (
+                    gx > dx
+                    and gy > dy
+                    and (gx + gw) > (dx + dw)
+                    and (gy + gh) > (dy + dh)
+                )
+                if bing and ginb:
+                    if gcontainb:
+                        ious[dindex][gindex] = 0.95
+                    else:
+                        if ious[dindex][gindex] > 0.1:
+                            ious[dindex][gindex] = max(0.5, ious[dindex][gindex])
+
+                # if (
+                #     g_center_x > dx
+                #     and g_center_x < (dx + dw)
+                #     and g_center_y > dy
+                #     and g_center_y < (dy + dh)
+                # ):  # gt_center in bbox
+                #     if (
+                #         d_center_x > gx
+                #         and d_center_x < (gx + gw)
+                #         and d_center_y > gy
+                #         and d_center_y < (gy + gh)
+                #     ):  # bbox_center in gt box
+                #         if (
+                #             gx > dx
+                #             and gy > dy
+                #             and (gx + gw) > (dx + dw)
+                #             and (gy + gh) > (dy + dh)
+                #         ):
+                #             ious[dindex][gindex] = 0.95
+                #             print("fsdfsdfsd")
+                # if (
+                #     g_center_x > dx
+                #     and g_center_x < (dx + dw)
+                #     and g_center_y > dy  # gt_center in gt bbox
+                #     and g_center_y < (dy + dh)
+                # ) or (
+                #     d_center_x > gx
+                #     and d_center_x < (gx + gw)
+                #     and d_center_y > gy  # bbox_center in gt
+                #     and d_center_y < (gy + gh)
+                # ):
+                #     if ious[dindex][gindex] > 0.2:
+                #         ious[dindex][gindex] = max(0.5, ious[dindex][gindex])
+                #     print("fsdfsdfsd")
+        return ious
 
 
 class NEWParams:

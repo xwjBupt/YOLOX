@@ -31,7 +31,7 @@ class Exp(MyExp):
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.2
         )
         # Define yourself dataset path
-        self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/"
+        self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO"
         self.train_ann = "train_binary.json"
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"

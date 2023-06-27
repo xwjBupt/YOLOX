@@ -68,7 +68,7 @@ class MosaicDetection(Dataset):
         zoom_blur_dict=dict(
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.22
         ),
-        cut_copy_dict=dict(iou_thresh=0.2, paste_number=10, thresh=64, p=1),
+        cut_copy_dict=dict(iou_thresh=0.2, paste_number=10, thresh=64, p=0.25),
         enable_mixup=True,
         mosaic_prob=1.0,
         mixup_prob=1.0,

@@ -453,15 +453,16 @@ class YOLOXHead(nn.Module):
         loss_obj = (
             self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
         ).sum() / num_fg
-        pt_obj = torch.exp(-loss_obj)
-        loss_obj_focal = 1 * (1 - pt_obj) ** 2 * loss_obj
         loss_cls = (
             self.bcewithlog_loss(
                 cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
             )
         ).sum() / num_fg
+        temp = 0
+        pt_obj = torch.exp(-loss_obj)
+        loss_obj_focal = 1 * (1 - pt_obj) ** 2 * loss_obj * temp
         pt_cls = torch.exp(-loss_cls)
-        loss_cls_focal = 1 * (1 - pt_cls) ** 2 * loss_cls
+        loss_cls_focal = 1 * (1 - pt_cls) ** 2 * loss_cls * temp
 
         # focal_obj = (self.focal(obj_preds.view(-1, 1), obj_targets)).sum() / num_fg
         # focal_cls = (

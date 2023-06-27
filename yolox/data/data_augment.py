@@ -363,11 +363,10 @@ class CUTCOPY(object):
         self.thresh = thresh * thresh
         self.p = p
 
-    def __call__(self, image, bboxes, **kwargs):
+    def __call__(self, image, labels, **kwargs):
         raw_img = copy.deepcopy(image)
         if random.random() < self.p:
-            ## bboxes: [[x1,y1,x2,y2,label], ...]
-            labels = bboxes
+            ## labels: [[x1,y1,x2,y2,label], ...]
             if len(labels) == 0:
                 return
             rescale_labels = self.rescale_yolo_labels(labels, image.shape)  # 转换坐标表示

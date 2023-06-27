@@ -9,7 +9,7 @@ import numpy as np
 import albumentations as A
 from yolox.utils import adjust_box_anns, get_local_rank, xyxy2xywh, xywh2xyxy
 
-from ..data_augment import random_affine
+from ..data_augment import random_affine, CUTCOPY
 from .datasets_wrapper import Dataset
 
 
@@ -54,8 +54,8 @@ class MosaicDetection(Dataset):
         mixup_scale=(0.5, 1.5),
         shear=2.0,
         crop_dict=dict(
-            width=448,
-            height=336,
+            width=256,
+            height=256,
             erosion_rate=0.2,
             min_area=128,
             min_visibility=0.1,
@@ -68,6 +68,7 @@ class MosaicDetection(Dataset):
         zoom_blur_dict=dict(
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.22
         ),
+        cut_copy_dict=dict(iou_thresh=0.2, paste_number=10, thresh=64, p=1),
         enable_mixup=True,
         mosaic_prob=1.0,
         mixup_prob=1.0,
@@ -103,6 +104,7 @@ class MosaicDetection(Dataset):
         self.mixup_prob = mixup_prob
         self.motion_blur_dict = motion_blur_dict
         self.zoom_blur_dict = zoom_blur_dict
+        self.cut_copy_dict = cut_copy_dict
         self.local_rank = get_local_rank()
         self.TRANSFORMS = A.Compose(
             [
@@ -111,6 +113,7 @@ class MosaicDetection(Dataset):
                     height=self.crop_dict.get("height"),
                     erosion_rate=self.crop_dict.get("erosion_rate"),
                 ),
+                A.HorizontalFlip(p=0.5),
                 A.MotionBlur(
                     blur_limit=self.motion_blur_dict.get("blur_limit"),
                     allow_shifted=self.motion_blur_dict.get("allow_shifted"),
@@ -129,6 +132,12 @@ class MosaicDetection(Dataset):
                 min_area=self.crop_dict.get("min_area"),
                 min_visibility=self.crop_dict.get("min_visibility"),
             ),
+        )
+        self.cutcopy = CUTCOPY(
+            iou_thresh=self.cut_copy_dict.get("iou_thresh"),
+            paste_number=self.cut_copy_dict.get("paste_number"),
+            thresh=self.cut_copy_dict.get("thresh"),
+            p=self.cut_copy_dict.get("p"),
         )
 
     def __len__(self):
@@ -152,6 +161,7 @@ class MosaicDetection(Dataset):
 
             for i_mosaic, index in enumerate(indices):
                 img, _labels, _, img_id = self._dataset.pull_item(index)
+
                 # _labels: [[xmin, ymin, xmax, ymax, label_ind], ...]
                 if random.random() < self.crop_dict.get("random_rate"):
                     new_boxxes = xyxy2xywh(_labels)
@@ -163,7 +173,7 @@ class MosaicDetection(Dataset):
                     if len(_labels_t) > 0:
                         _labels = xywh2xyxy(np.array(transformed["bboxes"]))
                         img = transformed["image"]
-
+                img, _labels = self.cutcopy(img, _labels)
                 h0, w0 = img.shape[:2]  # orig hw
                 scale = min(1.0 * input_h / h0, 1.0 * input_w / w0)
                 img = cv2.resize(

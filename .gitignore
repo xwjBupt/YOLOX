@@ -232,3 +232,4 @@ tools/artifacts/*
 tools/wandb/*
 *artifacts*
 *wandb*
+*.png

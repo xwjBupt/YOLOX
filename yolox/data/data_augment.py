@@ -11,10 +11,10 @@ http://arxiv.org/abs/1512.02325
 import albumentations as A
 import math
 import random
+import copy
 
 import cv2
 import numpy as np
-
 from yolox.utils import xyxy2cxcywh
 
 
@@ -160,6 +160,328 @@ def preproc(img, input_size, swap=(2, 0, 1)):
     padded_img = padded_img.transpose(swap)
     padded_img = np.ascontiguousarray(padded_img, dtype=np.float32)
     return padded_img, r
+
+
+def issmallobject(bbox, thresh):
+    if bbox[0] * bbox[1] <= thresh:
+        return True
+    else:
+        return False
+
+
+def norm_sampling(search_space):
+    # 随机生成点
+    search_x_left, search_y_left, search_x_right, search_y_right = search_space
+    try:
+        new_bbox_x_center = random.randint(int(search_x_left), int(search_x_right))
+        new_bbox_y_center = random.randint(int(search_y_left), int(search_y_right))
+    except:
+        print("this is at here norm_sampling with {}".format(search_space))
+    return [new_bbox_x_center, new_bbox_y_center]
+
+
+def flip_bbox(roi):
+    roi = roi[:, ::-1, :]
+    return roi
+
+
+def sampling_new_bbox_center_point(img_shape, bbox):
+    #### sampling space ####
+    height, width, nc = img_shape
+    cl, x_left, y_left, x_right, y_right = bbox
+    bbox_w, bbox_h = x_right - x_left, y_right - y_left
+    ### left top ###
+    if x_left <= width / 2:
+        search_x_left, search_y_left, search_x_right, search_y_right = (
+            width * 0.6,
+            height / 2,
+            width * 0.75,
+            height * 0.75,
+        )
+    if x_left > width / 2:
+        search_x_left, search_y_left, search_x_right, search_y_right = (
+            width * 0.25,
+            height / 2,
+            width * 0.5,
+            height * 0.75,
+        )
+    return [search_x_left, search_y_left, search_x_right, search_y_right]
+
+
+def bbox_iou(box1, box2):
+    cl, b1_x1, b1_y1, b1_x2, b1_y2 = box1
+    cl, b2_x1, b2_y1, b2_x2, b2_y2 = box2
+    # get the corrdinates of the intersection rectangle
+    inter_rect_x1 = max(b1_x1, b2_x1)
+    inter_rect_y1 = max(b1_y1, b2_y1)
+    inter_rect_x2 = min(b1_x2, b2_x2)
+    inter_rect_y2 = min(b1_y2, b2_y2)
+    # Intersection area
+    inter_width = inter_rect_x2 - inter_rect_x1 + 1
+    inter_height = inter_rect_y2 - inter_rect_y1 + 1
+    if inter_width > 0 and inter_height > 0:  # strong condition
+        inter_area = inter_width * inter_height
+        # Union Area
+        b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
+        b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
+        iou = inter_area / (b1_area + b2_area - inter_area)
+    else:
+        iou = 0
+    return iou
+
+
+def random_add_patches(bbox, rescale_boxes, shape, paste_number, iou_thresh, enlarge=0):
+    temp = []
+    for rescale_bbox in rescale_boxes:
+        temp.append(rescale_bbox)
+    cl, x_left, y_left, x_right, y_right = bbox
+    bbox_w, bbox_h = x_right - x_left, y_right - y_left
+    center_search_space = sampling_new_bbox_center_point(shape, bbox)
+    # height, width
+    success_num = 0
+    new_bboxes = []
+    while success_num < paste_number:
+        new_bbox_x_center, new_bbox_y_center = norm_sampling(center_search_space)
+        # print(norm_sampling(center_search_space))
+        new_bbox_x_left, new_bbox_y_left, new_bbox_x_right, new_bbox_y_right = (
+            new_bbox_x_center - 0.5 * bbox_w - enlarge,
+            new_bbox_y_center - 0.5 * bbox_h - enlarge,
+            new_bbox_x_center + 0.5 * bbox_w + enlarge,
+            new_bbox_y_center + 0.5 * bbox_h + enlarge,
+        )
+        new_bbox = [
+            cl,
+            int(new_bbox_x_left),
+            int(new_bbox_y_left),
+            int(new_bbox_x_right),
+            int(new_bbox_y_right),
+        ]
+        ious = [bbox_iou(new_bbox, bbox_t) for bbox_t in rescale_boxes]
+        if max(ious) <= iou_thresh and (
+            new_bbox_x_right < shape[1] and new_bbox_y_right < shape[0]
+        ):
+            # print(
+            #     "new_bbox_x_right {} width {} -- new_bbox_y_right {} height {}".format(
+            #         new_bbox_x_right, shape[1], new_bbox_y_right, shape[0]
+            #     )
+            # )
+            # for bbox_t in rescale_boxes:
+            # iou =  bbox_iou(new_bbox[1:],bbox_t[1:])
+            # if(iou <= iou_thresh):
+            success_num += 1
+            temp.append(new_bbox)
+            new_bboxes.append(new_bbox)
+        else:
+            continue
+    return new_bboxes
+
+
+def rescale_yolo_labels(labels, img_shape):
+    height, width, nchannel = img_shape
+    rescale_boxes = []
+    for box in list(labels):
+        x_c = float(box[1]) * width
+        y_c = float(box[2]) * height
+        w = float(box[3]) * width
+        h = float(box[4]) * height
+        x_left = x_c - w * 0.5
+        y_left = y_c - h * 0.5
+        x_right = x_c + w * 0.5
+        y_right = y_c + h * 0.5
+        rescale_boxes.append(
+            [box[0], int(x_left), int(y_left), int(x_right), int(y_right)]
+        )
+    return rescale_boxes
+
+
+def copysmallobjects(
+    image,
+    labels,
+):
+    if len(labels) == 0:
+        return
+    rescale_labels = rescale_yolo_labels(labels, image.shape)  # 转换坐标表示
+    all_boxes = []
+
+    for idx, rescale_label in enumerate(rescale_labels):
+        all_boxes.append(rescale_label)
+        # 目标的长宽
+        rescale_label_height, rescale_label_width = (
+            rescale_label[4] - rescale_label[2],
+            rescale_label[3] - rescale_label[1],
+        )
+
+        if (
+            issmallobject((rescale_label_height, rescale_label_width), thresh=64 * 64)
+            and rescale_label[0] == "1"
+        ):
+            roi = image[
+                rescale_label[2] : rescale_label[4], rescale_label[1] : rescale_label[3]
+            ]
+
+            new_bboxes = random_add_patches(
+                rescale_label,
+                rescale_labels,
+                image.shape,
+                paste_number=2,
+                iou_thresh=0.2,
+            )
+            count = 0
+
+            # 将新生成的位置加入到label,并在相应位置画出物体
+            for new_bbox in new_bboxes:
+                count += 1
+                all_boxes.append(new_bbox)
+                cl, bbox_left, bbox_top, bbox_right, bbox_bottom = (
+                    new_bbox[0],
+                    new_bbox[1],
+                    new_bbox[2],
+                    new_bbox[3],
+                    new_bbox[4],
+                )
+                try:
+                    if count > 1:
+                        roi = flip_bbox(roi)
+                    image[bbox_top:bbox_bottom, bbox_left:bbox_right] = roi
+                except ValueError:
+                    continue
+
+    # dir_name = find_str(image_dir)
+    # save_dir = join(save_base_dir, dir_name)
+    # check_dir(save_dir)
+    # yolo_txt_dir = join(save_dir, basename(image_dir.replace(".jpg", "_augment.txt")))
+    # cv2.imwrite(
+    #     join(save_dir, basename(image_dir).replace(".jpg", "_augment.jpg")), image
+    # )
+    # convert_all_boxes(image.shape, all_boxes, yolo_txt_dir)
+
+
+class CUTCOPY(object):
+    def __init__(self, iou_thresh=0.2, paste_number=4, thresh=64, p=0.22, **kwargs):
+        self.iou_thresh = iou_thresh
+        self.paste_number = paste_number
+        self.thresh = thresh * thresh
+        self.p = p
+
+    def __call__(self, image, bboxes, **kwargs):
+        raw_img = copy.deepcopy(image)
+        if random.random() < self.p:
+            ## bboxes: [[x1,y1,x2,y2,label], ...]
+            labels = bboxes
+            if len(labels) == 0:
+                return
+            rescale_labels = self.rescale_yolo_labels(labels, image.shape)  # 转换坐标表示
+            all_boxes = []
+            for b in rescale_labels:
+                raw_img = cv2.rectangle(
+                    raw_img,
+                    (int(b[1]), int(b[2])),  # (x,y)
+                    (int(b[3]), int(b[4])),
+                    color=(214, 128, 98),
+                    thickness=2,
+                )
+                raw_img = cv2.putText(
+                    raw_img,
+                    "GT",
+                    (int(b[1]), int(b[2])),
+                    cv2.FONT_ITALIC,
+                    1,
+                    (76, 255, 0),
+                    1,
+                )
+
+            for idx, rescale_label in enumerate(rescale_labels):
+                all_boxes.append(rescale_label)
+                # 目标的长宽
+                rescale_label_height, rescale_label_width = (
+                    rescale_label[4] - rescale_label[2],
+                    rescale_label[3] - rescale_label[1],
+                )
+
+                if issmallobject(
+                    (rescale_label_height, rescale_label_width), thresh=self.thresh
+                ):
+                    roi = image[
+                        rescale_label[2] : rescale_label[4],
+                        rescale_label[1] : rescale_label[3],
+                    ]
+
+                    new_bboxes = random_add_patches(
+                        rescale_label,
+                        rescale_labels,
+                        image.shape,
+                        paste_number=self.paste_number,
+                        iou_thresh=self.iou_thresh,
+                    )
+                    count = 0
+
+                    # 将新生成的位置加入到label,并在相应位置画出物体
+                    for new_bbox in new_bboxes:
+                        count += 1
+                        cl, bbox_left, bbox_top, bbox_right, bbox_bottom = (
+                            new_bbox[0],
+                            new_bbox[1],
+                            new_bbox[2],
+                            new_bbox[3],
+                            new_bbox[4],
+                        )
+                        try:
+                            if random.random() < self.p:
+                                roi = flip_bbox(roi)
+                            image[bbox_top:bbox_bottom, bbox_left:bbox_right] = roi
+                            all_boxes.append(new_bbox)
+                            raw_img = cv2.rectangle(
+                                raw_img,
+                                (bbox_left, bbox_top),  # (x,y)
+                                (bbox_right, bbox_bottom),
+                                color=(255, 128, 0),
+                                thickness=2,
+                            )
+
+                            raw_img = cv2.putText(
+                                raw_img,
+                                str(cl),
+                                (bbox_left, bbox_top),
+                                cv2.FONT_ITALIC,
+                                1,
+                                (0, 255, 0),
+                                1,
+                            )
+                        except ValueError:
+                            continue
+            labels = self.reverse_rescale_yolo_labels(all_boxes, image.shape)
+        # cv2.imwrite(
+        #     '/ai/mnt/code/YOLOX/imgraw-txt.png', raw_img
+        # )
+        return image, np.array(labels)
+
+    def reverse_rescale_yolo_labels(self, labels, img_shape):
+        rescale_boxes = []
+        height, width, nchannel = img_shape
+        for box in list(labels):
+            rescale_boxes.append([box[1], box[2], box[3], box[4], box[0]])
+        return rescale_boxes
+
+    def rescale_yolo_labels(self, labels, img_shape):
+        height, width, nchannel = img_shape
+        rescale_boxes = []
+        for box in list(labels):
+            if max(box) < 1:
+                x_left = float(box[0]) * width
+                y_left = float(box[1]) * height
+                x_right = float(box[2]) * width
+                y_right = float(box[3]) * height
+                label = box[-1]
+            else:
+                x_left = box[0]
+                y_left = box[1]
+                x_right = box[2]
+                y_right = box[3]
+                label = box[-1]
+            rescale_boxes.append(
+                [label, int(x_left), int(y_left), int(x_right), int(y_right)]
+            )
+        return rescale_boxes
 
 
 class TrainTransform:

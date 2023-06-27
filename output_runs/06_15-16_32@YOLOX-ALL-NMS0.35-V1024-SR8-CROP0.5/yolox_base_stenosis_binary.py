@@ -25,7 +25,7 @@ class Exp(MyExp):
             random_rate=0.5,
         )
         # Define yourself dataset path
-        self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/"
+        self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO"
         self.train_ann = "train_binary.json"
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"

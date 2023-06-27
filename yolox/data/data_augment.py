@@ -239,8 +239,9 @@ def random_add_patches(bbox, rescale_boxes, shape, paste_number, iou_thresh, enl
     center_search_space = sampling_new_bbox_center_point(shape, bbox)
     # height, width
     success_num = 0
+    fail_num = 0
     new_bboxes = []
-    while success_num < paste_number:
+    while success_num < paste_number and fail_num < 3 * paste_number:
         new_bbox_x_center, new_bbox_y_center = norm_sampling(center_search_space)
         # print(norm_sampling(center_search_space))
         new_bbox_x_left, new_bbox_y_left, new_bbox_x_right, new_bbox_y_right = (
@@ -272,6 +273,7 @@ def random_add_patches(bbox, rescale_boxes, shape, paste_number, iou_thresh, enl
             temp.append(new_bbox)
             new_bboxes.append(new_bbox)
         else:
+            fail_num += 1
             continue
     return new_bboxes
 

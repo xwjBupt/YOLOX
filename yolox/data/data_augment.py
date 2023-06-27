@@ -359,11 +359,14 @@ def copysmallobjects(
 
 
 class CUTCOPY(object):
-    def __init__(self, iou_thresh=0.2, paste_number=4, thresh=64, p=0.22, **kwargs):
+    def __init__(
+        self, iou_thresh=0.2, paste_number=4, thresh=64, p=0.22, expand=0, **kwargs
+    ):
         self.iou_thresh = iou_thresh
         self.paste_number = paste_number
         self.thresh = thresh * thresh
         self.p = p
+        self.expand = expand
 
     def __call__(self, image, labels, **kwargs):
         raw_img = copy.deepcopy(image)
@@ -403,8 +406,8 @@ class CUTCOPY(object):
                     (rescale_label_height, rescale_label_width), thresh=self.thresh
                 ):
                     roi = image[
-                        rescale_label[2] : rescale_label[4],
-                        rescale_label[1] : rescale_label[3],
+                        rescale_label[2] - self.expand : rescale_label[4] + self.expand,
+                        rescale_label[1] - self.expand : rescale_label[3] + self.expand,
                     ]
 
                     new_bboxes = random_add_patches(
@@ -429,7 +432,10 @@ class CUTCOPY(object):
                         try:
                             if random.random() < self.p:
                                 roi = flip_bbox(roi)
-                            image[bbox_top:bbox_bottom, bbox_left:bbox_right] = roi
+                            image[
+                                bbox_top - self.expand : bbox_bottom + self.expand,
+                                bbox_left - self.expand : bbox_right + self.expand,
+                            ] = roi
                             all_boxes.append(new_bbox)
                             raw_img = cv2.rectangle(
                                 raw_img,

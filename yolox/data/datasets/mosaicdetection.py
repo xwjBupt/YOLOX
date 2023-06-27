@@ -69,6 +69,7 @@ class MosaicDetection(Dataset):
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.22
         ),
         cut_copy_dict=dict(iou_thresh=0.2, paste_number=10, thresh=64, p=0.25),
+        clip_dict=dict(low=48, high=192, p=0.25),
         enable_mixup=True,
         mosaic_prob=1.0,
         mixup_prob=1.0,
@@ -96,6 +97,7 @@ class MosaicDetection(Dataset):
         self.translate = translate
         self.scale = mosaic_scale
         self.crop_dict = crop_dict
+        self.clip_dict = clip_dict
         self.shear = shear
         self.mixup_scale = mixup_scale
         self.enable_mosaic = mosaic
@@ -161,6 +163,10 @@ class MosaicDetection(Dataset):
 
             for i_mosaic, index in enumerate(indices):
                 img, _labels, _, img_id = self._dataset.pull_item(index)
+                if random.random() < self.clip_dict.get("p"):
+                    img = np.clip(
+                        img, self.clip_dict.get("low"), self.clip_dict.get("high")
+                    )
 
                 # _labels: [[xmin, ymin, xmax, ymax, label_ind], ...]
                 if random.random() < self.crop_dict.get("random_rate"):

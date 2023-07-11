@@ -33,7 +33,7 @@ class IOUloss(nn.Module):
         iou = (area_i) / (area_u + 1e-16)
 
         if self.loss_type == "iou":
-            loss = 1 - iou ** 2
+            loss = 1 - iou**2
         elif self.loss_type == "giou":
             c_tl = torch.min(
                 (pred[:, :2] - pred[:, 2:] / 2), (target[:, :2] - target[:, 2:] / 2)
@@ -44,6 +44,41 @@ class IOUloss(nn.Module):
             area_c = torch.prod(c_br - c_tl, 1)
             giou = iou - (area_c - area_u) / area_c.clamp(1e-16)
             loss = 1 - giou.clamp(min=-1.0, max=1.0)
+        elif self.loss_type == "siou":
+            # Compute SIoU terms
+            si = (
+                torch.min(pred[:, 2], target[:, 2])
+                - torch.max(pred[:, 0], target[:, 0])
+                + 1
+            )
+            sj = (
+                torch.min(pred[:, 3], target[:, 3])
+                - torch.max(pred[:, 1], target[:, 1])
+                + 1
+            )
+            s_union = (pred[:, 2] - pred[:, 0] + 1) * (pred[:, 3] - pred[:, 1] + 1) + (
+                pred[:, 2] - target[:, 0] + 1
+            ) * (pred[:, 3] - target[:, 1] + 1)
+            s_intersection = si * sj
+
+            # Compute SCYLLA-IoU
+            siou = iou - (s_intersection / s_union)
+            loss = 1 - siou
+        else:
+            assert False, "IOU Loss type {} not support yet"
+        # elif self.loss_type == "wiou":
+        #     intersection_area = torch.clamp(x2 - x1, min=0) * torch.clamp(
+        #         y2 - y1, min=0
+        #     )
+        #     pred_boxes_area = (pred_boxes[:, 2] - pred_boxes[:, 0]) * (
+        #         pred_boxes[:, 3] - pred_boxes[:, 1]
+        #     )
+        #     target_boxes_area = (target_boxes[:, 2] - target_boxes[:, 0]) * (
+        #         target_boxes[:, 3] - target_boxes[:, 1]
+        #     )
+        #     union_area = pred_boxes_area + target_boxes_area - intersection_area
+        #     iou = intersection_area / union_area
+        #     loss = 1 - iou.mean()
 
         if self.reduction == "mean":
             loss = loss.mean()

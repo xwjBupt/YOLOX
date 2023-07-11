@@ -51,3 +51,4 @@ class Exp(MyExp):
         self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150
+        self.iou_type = "iou"

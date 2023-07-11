@@ -79,6 +79,7 @@ class YOLOXHead(nn.Module):
         strides=[8, 16, 32],
         in_channels=[256, 512, 1024],
         act="silu",
+        iou_type="iou",
         depthwise=False,
     ):
         """
@@ -181,7 +182,7 @@ class YOLOXHead(nn.Module):
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         # self.focal = BCEFocalLoss(gamma=2)
-        self.iou_loss = IOUloss(reduction="none")
+        self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
 

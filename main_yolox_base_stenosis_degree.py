@@ -46,7 +46,7 @@ class Exp(MyExp):
         )
         self.num_classes = 3
         self.max_epoch = 100
-        self.data_num_workers = 4
+        self.data_num_workers = 6
         self.batch_size = 3
         self.test_conf = 0.005
         self.eval_interval = 1

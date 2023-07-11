@@ -444,7 +444,7 @@ class WandbLogger(object):
 
         return cls(
             config=vars(exp),
-            name=args.exp_name,
+            name=args.experiment_name,
             val_dataset=val_dataset,
             **wandb_params,
         )

@@ -30,20 +30,24 @@ class Exp(MyExp):
         self.motion_blur_dict = dict(
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.4
         )
+        self.cut_copy_dict = dict(
+            iou_thresh=0.2, paste_number=10, thresh=64, expand=10, p=0.25
+        )
+        self.clip_dict = dict(low=48, high=192, p=0)
         # Define yourself dataset path
         self.data_dir = "/ai/mnt/data/stenosis/selected/Multi/FOLD0/"
         self.train_ann = "train_multi.json"
         self.val_ann = "val_multi.json"
         self.test_ann = "val_multi.json"
         self.fold = "FOLD0"
-        self.exp_name = (
-            "YOLOX-ALL#M-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e-3"
+        self.exp_name = "YOLOX-MULTI-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10"
+        self.output_dir = os.path.join(
+            "/ai/mnt/code/YOLOX/output_runs/Multi", self.exp_name
         )
-        self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
         self.num_classes = 18
-        self.max_epoch = 200
-        self.data_num_workers = 4
-        self.batch_size = 2
+        self.max_epoch = 100
+        self.data_num_workers = 6
+        self.batch_size = 3
         self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150

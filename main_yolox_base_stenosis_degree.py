@@ -44,10 +44,10 @@ class Exp(MyExp):
         self.output_dir = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Degree", self.exp_name
         )
-        self.num_classes = 2
+        self.num_classes = 3
         self.max_epoch = 100
         self.data_num_workers = 4
-        self.batch_size = 3
+        self.batch_size = 2
         self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150

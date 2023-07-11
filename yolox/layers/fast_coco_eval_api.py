@@ -297,14 +297,17 @@ class COCOeval_opt(COCOeval):
                     and (gx + gw) > (dx + dw)
                     and (gy + gh) > (dy + dh)
                 )
-                # if bing and ginb:
-                #     if gcontainb:
-                #         ious[dindex][gindex] = 0.95
-                #     else:
-                #         if ious[dindex][gindex] > 0.1:
-                #             ious[dindex][gindex] = max(0.5, ious[dindex][gindex])
-                if bing or ginb:
-                    ious[dindex][gindex] = 0.75
+                # TODO keyfunction
+                if bing and ginb:
+                    if gcontainb:
+                        ious[dindex][gindex] = 0.95
+                    else:
+                        if ious[dindex][gindex] > 0.1:
+                            ious[dindex][gindex] = max(0.5, ious[dindex][gindex])
+
+                # if bing or ginb:
+                #     ious[dindex][gindex] = 0.75
+
                 # if (
                 #     g_center_x > dx
                 #     and g_center_x < (dx + dw)

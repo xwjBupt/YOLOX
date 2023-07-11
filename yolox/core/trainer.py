@@ -58,7 +58,9 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
-        self.file_name = os.path.join("/ai/mnt/code/YOLOX/output_runs", exp.exp_name)
+        self.file_name = os.path.join(
+            "/ai/mnt/code/YOLOX/output_runs/Degree", exp.exp_name
+        )
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
         if not os.path.exists(

@@ -58,17 +58,23 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
+        # TODO CHECK
         self.file_name = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Degree", exp.exp_name
         )
+        # TODO fix dir make in visualize
         if self.rank == 0:
-            os.makedirs(self.file_name, exist_ok=True)
+            if 
+                os.makedirs(self.file_name, exist_ok=True)
         if not os.path.exists(
-            os.path.join(self.file_name, os.path.basename(args.exp_file))
+            os.path.join(self.file_name, os.path.basename(args.exp_file).replace(".py", "_copy.py"))
         ):
             shutil.copyfile(
                 args.exp_file,
-                os.path.join(self.file_name, os.path.basename(args.exp_file)),
+                os.path.join(
+                    self.file_name,
+                    os.path.basename(args.exp_file).replace(".py", "_copy.py"),
+                ),
             )
         setup_logger(
             self.file_name,

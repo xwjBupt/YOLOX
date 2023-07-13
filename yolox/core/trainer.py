@@ -64,10 +64,12 @@ class Trainer:
         )
         # TODO fix dir make in visualize
         if self.rank == 0:
-            if 
-                os.makedirs(self.file_name, exist_ok=True)
+            os.makedirs(self.file_name, exist_ok=True)
         if not os.path.exists(
-            os.path.join(self.file_name, os.path.basename(args.exp_file).replace(".py", "_copy.py"))
+            os.path.join(
+                self.file_name,
+                os.path.basename(args.exp_file).replace(".py", "_copy.py"),
+            )
         ):
             shutil.copyfile(
                 args.exp_file,

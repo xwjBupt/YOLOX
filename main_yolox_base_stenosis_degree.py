@@ -40,7 +40,7 @@ class Exp(MyExp):
         self.val_ann = "val_degree.json"
         self.test_ann = "val_degree.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10-giou"
+        self.exp_name = "YOLOX-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10-siou"
         self.output_dir = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Degree", self.exp_name
         )
@@ -51,4 +51,4 @@ class Exp(MyExp):
         self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150
-        self.iou_type = "giou"
+        self.iou_type = "siou"

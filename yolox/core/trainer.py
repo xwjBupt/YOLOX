@@ -230,6 +230,11 @@ class Trainer:
         if (self.epoch + 1) % self.exp.eval_interval == 0:
             all_reduce_norm(self.model)
             self.evaluate_and_save_model()
+        logger.info(
+            "current best AP is {:.2f} @ epoch {}".format(
+                self.best_ap * 100, self.epoch + 1
+            )
+        )
 
     def before_iter(self):
         pass

@@ -199,7 +199,7 @@ class WandbLogger(object):
             entity=self.entity,
             dir=self.save_dir,
             resume="allow",
-            group="DEGREE",
+            group="BINARY",
         )
         self._wandb_init.update(**kwargs)
 

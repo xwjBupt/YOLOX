@@ -12,7 +12,6 @@ class Exp(MyExp):
         self.depth = 1.33
         self.width = 1.25
         self.nmsthre = 0.35
-        self.iou_type = "siou"
         self.input_size = (1024, 1024)
         self.test_size = (1024, 1024)
         self.multiscale_range = 8
@@ -36,17 +35,20 @@ class Exp(MyExp):
         )
         self.clip_dict = dict(low=48, high=192, p=0.25)
         # Define yourself dataset path
-        self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO"
-        self.train_ann = "train_binary.json"
-        self.val_ann = "val_binary.json"
-        self.test_ann = "val_binary.json"
+        self.data_dir = "/ai/mnt/data/stenosis/selected/Degree/FOLD0/"
+        self.train_ann = "train_degree.json"
+        self.val_ann = "val_degree.json"
+        self.test_ann = "val_degree.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-clip0.25-cutcopy_ex10-siou"
-        self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
-        self.num_classes = 1
+        self.exp_name = "YOLOX-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10-clip0.25-siou"
+        self.output_dir = os.path.join(
+            "/ai/mnt/code/YOLOX/output_runs/Degree", self.exp_name
+        )
+        self.num_classes = 3
         self.max_epoch = 100
         self.data_num_workers = 4
         self.batch_size = 2
         self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150
+        self.iou_type = "siou"

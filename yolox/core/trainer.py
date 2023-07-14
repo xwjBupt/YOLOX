@@ -59,7 +59,7 @@ class Trainer:
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
         self.file_name = os.path.join(
-            "/ai/mnt/code/YOLOX/output_runs/Degree", exp.exp_name
+            "/ai/mnt/code/YOLOX/output_runs/Binary", exp.exp_name
         )
         self.output_exp_file = os.path.join(
             self.file_name,

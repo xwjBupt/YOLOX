@@ -58,16 +58,18 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
-        self.file_name = os.path.join("/ai/mnt/code/YOLOX/output_runs", exp.exp_name)
+        self.file_name = os.path.join(
+            "/ai/mnt/code/YOLOX/output_runs/Degree", exp.exp_name
+        )
+        self.output_exp_file = os.path.join(
+            self.file_name,
+            os.path.basename(args.exp_file).replace(".py", "_copy.py"),
+        )
+        # TODO fix dir make in visualize
         if self.rank == 0:
             os.makedirs(self.file_name, exist_ok=True)
-        if not os.path.exists(
-            os.path.join(self.file_name, os.path.basename(args.exp_file))
-        ):
-            shutil.copyfile(
-                args.exp_file,
-                os.path.join(self.file_name, os.path.basename(args.exp_file)),
-            )
+        if not os.path.exists(self.output_exp_file):
+            shutil.copyfile(args.exp_file, self.output_exp_file)
         setup_logger(
             self.file_name,
             distributed_rank=self.rank,
@@ -83,6 +85,7 @@ class Trainer:
             raise
         finally:
             self.after_train()
+        return self.output_exp_file
 
     def train_in_epoch(self):
         for self.epoch in range(self.start_epoch, self.max_epoch):
@@ -227,6 +230,11 @@ class Trainer:
         if (self.epoch + 1) % self.exp.eval_interval == 0:
             all_reduce_norm(self.model)
             self.evaluate_and_save_model()
+        logger.info(
+            "current best AP is {:.2f} @ epoch {}".format(
+                self.best_ap * 100, self.epoch + 1
+            )
+        )
 
     def before_iter(self):
         pass

@@ -26,6 +26,7 @@ class Exp(BaseExp):
         self.width = 1.00
         # activation name. For example, if using "relu", then "silu" will be replaced to "relu".
         self.act = "silu"
+        self.iou_type = "giou"
 
         # ---------------- dataloader config ---------------- #
         # set worker to 4 for shorter dataloader init time
@@ -134,7 +135,11 @@ class Exp(BaseExp):
                 self.depth, self.width, in_channels=in_channels, act=self.act
             )
             head = YOLOXHead(
-                self.num_classes, self.width, in_channels=in_channels, act=self.act
+                self.num_classes,
+                self.width,
+                in_channels=in_channels,
+                act=self.act,
+                iou_type=self.iou_type,
             )
             self.model = YOLOX(backbone, head)
 

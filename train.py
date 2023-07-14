@@ -93,7 +93,7 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/main_yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/main_yolox_base_stenosis_degree.py",
         type=str,
         help="plz input your experiment description file",
     )
@@ -176,7 +176,12 @@ def main(exp: Exp, args):
     configure_omp()
     cudnn.benchmark = True
     trainer = exp.get_trainer(args)
-    trainer.train()
+    output_exp_file = trainer.train()
+    print("\n &&&&&&& eval Start &&&&&&& \n")
+    os.system(
+        "python {} --exp_file {}".format("/ai/mnt/code/YOLOX/eval.py", output_exp_file)
+    )
+    print("\n &&&&&&& eval Done &&&&&&& \n")
 
 
 if __name__ == "__main__":

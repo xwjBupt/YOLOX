@@ -79,6 +79,7 @@ class YOLOXHead(nn.Module):
         strides=[8, 16, 32],
         in_channels=[256, 512, 1024],
         act="silu",
+        iou_type="iou",
         depthwise=False,
     ):
         """
@@ -181,7 +182,7 @@ class YOLOXHead(nn.Module):
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         # self.focal = BCEFocalLoss(gamma=2)
-        self.iou_loss = IOUloss(reduction="none")
+        self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
 
@@ -449,32 +450,34 @@ class YOLOXHead(nn.Module):
         #         cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
         #     )
         # ).sum() / num_fg
-
-        loss_obj = (
-            self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
-        ).sum() / num_fg
-        loss_cls = (
-            self.bcewithlog_loss(
-                cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
-            )
-        ).sum() / num_fg
-        temp = 0
-        pt_obj = torch.exp(-loss_obj)
-        loss_obj_focal = 1 * (1 - pt_obj) ** 2 * loss_obj * temp
-        pt_cls = torch.exp(-loss_cls)
-        loss_cls_focal = 1 * (1 - pt_cls) ** 2 * loss_cls * temp
-
-        # focal_obj = (self.focal(obj_preds.view(-1, 1), obj_targets)).sum() / num_fg
-        # focal_cls = (
-        #     self.focal(cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets)
-        # ).sum() / num_fg
-
-        if self.use_l1:
-            loss_l1 = (
-                self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+        try:
+            loss_obj = (
+                self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
             ).sum() / num_fg
-        else:
-            loss_l1 = 0.0
+            loss_cls = (
+                self.bcewithlog_loss(
+                    cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets
+                )
+            ).sum() / num_fg
+            temp = 0
+            pt_obj = torch.exp(-loss_obj)
+            loss_obj_focal = 1 * (1 - pt_obj) ** 2 * loss_obj * temp
+            pt_cls = torch.exp(-loss_cls)
+            loss_cls_focal = 1 * (1 - pt_cls) ** 2 * loss_cls * temp
+
+            # focal_obj = (self.focal(obj_preds.view(-1, 1), obj_targets)).sum() / num_fg
+            # focal_cls = (
+            #     self.focal(cls_preds.view(-1, self.num_classes)[fg_masks], cls_targets)
+            # ).sum() / num_fg
+
+            if self.use_l1:
+                loss_l1 = (
+                    self.l1_loss(origin_preds.view(-1, 4)[fg_masks], l1_targets)
+                ).sum() / num_fg
+            else:
+                loss_l1 = 0.0
+        except Exception as e:
+            print (e)
 
         reg_weight = 5.0
         loss = (

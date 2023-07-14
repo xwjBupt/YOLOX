@@ -29,7 +29,7 @@ def make_parser():
 
     parser.add_argument(
         "--path",
-        default="/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO",
+        default="/ai/mnt/data/stenosis/selected/Degree/FOLD0/",
         help="path to images or video",
     )
     parser.add_argument("--camid", type=int, default=0, help="webcam demo camera id")
@@ -43,7 +43,7 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/06_27-15_54@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy/main_yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/Degree/07_11-17_16@YOLOX-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10/main_yolox_base_stenosis_degree_copy.py",
         type=str,
         help="please input your experiment description file",
     )
@@ -60,8 +60,8 @@ def make_parser():
         type=str,
         help="device to run our model, can either be cpu or gpu",
     )
-    parser.add_argument("--conf", default=0.3, type=float, help="test conf")
-    parser.add_argument("--nms", default=0.3, type=float, help="test nms threshold")
+    parser.add_argument("--conf", default=None, type=float, help="test conf")
+    parser.add_argument("--nms", default=None, type=float, help="test nms threshold")
     parser.add_argument("--tsize", default=None, type=int, help="test img size")
     parser.add_argument(
         "--fp16",
@@ -291,6 +291,7 @@ def imageflow_demo(predictor, vis_folder, current_time, args):
             break
 
 
+@logger.catch()
 def main(exp, args):
     if not args.experiment_name:
         args.experiment_name = exp.exp_name
@@ -328,7 +329,7 @@ def main(exp, args):
             ckpt_file = os.path.join(file_name, "best_ckpt.pth")
         else:
             ckpt_file = args.ckpt
-        logger.info("loading checkpoint")
+        logger.info("loading checkpoint from {}".format(ckpt_file))
         ckpt = torch.load(ckpt_file, map_location="cpu")
         # load the model state dict
         model.load_state_dict(ckpt["model"])

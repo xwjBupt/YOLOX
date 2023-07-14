@@ -39,7 +39,7 @@ def make_parser():
         type=str,
         help="url used to set up distributed training",
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=2, help="batch size")
+    parser.add_argument("-b", "--batch-size", type=int, default=1, help="batch size")
     parser.add_argument(
         "-d", "--devices", default=None, type=int, help="device for training"
     )
@@ -52,7 +52,7 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/06_28-05_18@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip/main_yolox_base_stenosis_binary.py",
+        default="/ai/mnt/code/YOLOX/output_runs/Degree/07_11-23_52@YOLOX-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10-giou/main_yolox_base_stenosis_degree_copy.py",
         type=str,
         help="please input your experiment description file",
     )
@@ -229,13 +229,17 @@ if __name__ == "__main__":
         dist_url=dist_url,
         args=(exp, args, num_gpu),
     )
+    print("\n @@@@@@ visualize_assign Start @@@@@@ \n")
     os.system(
         "python {} --exp_file {}".format(
             "/ai/mnt/code/YOLOX/visualize_assign.py", args.exp_file
         )
     )
+    print("\n @@@@@@ visualize_assign Done @@@@@@ \n")
+    print("\n ####### infer_show Start ###### \n")
     os.system(
         "python {} --exp_file {}".format(
             "/ai/mnt/code/YOLOX/infer_show.py", args.exp_file
         )
     )
+    print("\n ####### infer_show Done ###### \n")

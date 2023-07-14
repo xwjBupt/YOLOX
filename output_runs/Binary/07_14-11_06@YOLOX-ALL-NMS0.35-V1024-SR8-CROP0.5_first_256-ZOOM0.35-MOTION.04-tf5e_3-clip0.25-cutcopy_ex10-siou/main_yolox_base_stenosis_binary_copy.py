@@ -12,7 +12,7 @@ class Exp(MyExp):
         self.depth = 1.33
         self.width = 1.25
         self.nmsthre = 0.35
-        self.iou_type = "giou"
+        self.iou_type = "siou"
         self.input_size = (1024, 1024)
         self.test_size = (1024, 1024)
         self.multiscale_range = 8
@@ -41,7 +41,7 @@ class Exp(MyExp):
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-clip0.25-cutcopy_ex10-giou"
+        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-clip0.25-cutcopy_ex10-siou"
         self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
         self.num_classes = 1
         self.max_epoch = 100

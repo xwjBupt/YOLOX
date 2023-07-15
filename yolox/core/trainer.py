@@ -55,6 +55,7 @@ class Trainer:
         self.data_type = torch.float16 if args.fp16 else torch.float32
         self.input_size = exp.input_size
         self.best_ap = 0
+        self.best_ap_epoch = -1
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
@@ -231,8 +232,8 @@ class Trainer:
             all_reduce_norm(self.model)
             self.evaluate_and_save_model()
         logger.info(
-            "current best AP is {:.2f} @ epoch {}".format(
-                self.best_ap * 100, self.epoch + 1
+            ">>>>> current best AP is {:.2f} @ epoch {} <<<<<\n".format(
+                self.best_ap * 100, self.best_ap_epoch
             )
         )
 
@@ -351,37 +352,77 @@ class Trainer:
 
         with adjust_status(evalmodel, training=False):
             (
-                ap50_95,
-                ap50,
-                ap10,
-                ap20,
-                ap30,
-                ap40,
+                results,
                 summary,
             ), predictions = self.exp.eval(
                 evalmodel, self.evaluator, self.is_distributed, return_outputs=True
             )
 
-        update_best_ckpt = ap50_95 > self.best_ap
-        self.best_ap = max(self.best_ap, ap50_95)
-
+            AP5095 = results[0]
+            AP50 = results[1]
+            AP75 = results[2]
+            AP5095Small = results[3]
+            AP5095Medium = results[4]
+            AP5095Large = results[5]
+            AR5095All = results[8]
+            AR5095Small = results[9]
+            AR5095Medium = results[10]
+            AR5095Large = results[11]
+            AP10 = results[-4]
+            AP20 = results[-3]
+            AP30 = results[-2]
+            AP40 = results[-1]
+        update_best_ckpt = False
+        if AP5095 > self.best_ap:
+            update_best_ckpt = True
+            self.best_ap = max(self.best_ap, AP5095)
+            self.best_ap_epoch = self.epoch + 1
         if self.rank == 0:
             if self.args.logger == "tensorboard":
-                self.tblogger.add_scalar("val/COCOAP50", ap50, self.epoch + 1)
-                self.tblogger.add_scalar("val/COCOAP50_95", ap50_95, self.epoch + 1)
-                self.tblogger.add_scalar("val/COCOAP10", ap10, self.epoch + 1)
-                self.tblogger.add_scalar("val/COCOAP20", ap20, self.epoch + 1)
-                self.tblogger.add_scalar("val/COCOAP30", ap30, self.epoch + 1)
-                self.tblogger.add_scalar("val/COCOAP40", ap40, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCO#AP50", AP50, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCO#AP75", AP75, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCO#AP50_95", AP5095, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCO#AP10", AP10, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCO#AP20", AP20, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCO#AP30", AP30, self.epoch + 1)
+                self.tblogger.add_scalar("val/COCO#AP40", AP40, self.epoch + 1)
+                self.tblogger.add_scalar(
+                    "val/COCO#AP5095Small", AP5095Small, self.epoch + 1
+                )
+                self.tblogger.add_scalar(
+                    "val/COCO#AP5095Medium", AP5095Medium, self.epoch + 1
+                )
+                self.tblogger.add_scalar(
+                    "val/COCO#AP5095Large", AP5095Large, self.epoch + 1
+                )
+                self.tblogger.add_scalar("val/COCOAR5095All", AR5095All, self.epoch + 1)
+                self.tblogger.add_scalar(
+                    "val/COCO#AR5095Small", AR5095Small, self.epoch + 1
+                )
+                self.tblogger.add_scalar(
+                    "val/COCO#AR5095Medium", AR5095Medium, self.epoch + 1
+                )
+                self.tblogger.add_scalar(
+                    "val/COCO#AR5095Large", AR5095Large, self.epoch + 1
+                )
+
             if self.args.logger == "wandb":
                 self.wandb_logger.log_metrics(
                     {
-                        "val/COCOAP50": ap50,
-                        "val/COCOAP50_95": ap50_95,
-                        "val/COCOAP10": ap10,
-                        "val/COCOAP20": ap20,
-                        "val/COCOAP30": ap30,
-                        "val/COCOAP40": ap40,
+                        "val/COCO#AP50": AP50,
+                        "val/COCO#AP75": AP75,
+                        "val/COCO#AP50_95": AP5095,
+                        "val/COCO#AP10": AP10,
+                        "val/COCO#AP20": AP20,
+                        "val/COCO#AP30": AP30,
+                        "val/COCO#AP40": AP40,
+                        "val/COCO#AP5095Small": AP5095Small,
+                        "val/COCO#AP5095Medium": AP5095Medium,
+                        "val/COCO#AP5095Large": AP5095Large,
+                        "val/COCOAR5095All": AR5095All,
+                        "val/COCO#AR5095Small": AR5095Small,
+                        "val/COCO#AR5095Medium": AR5095Medium,
+                        "val/COCO#AR5095Large": AR5095Large,
                         "train/epoch": self.epoch + 1,
                     }
                 )
@@ -389,9 +430,9 @@ class Trainer:
             logger.info("\n" + summary)
         synchronize()
 
-        self.save_ckpt("last_epoch", update_best_ckpt, ap=ap50_95)
+        self.save_ckpt("last_epoch", update_best_ckpt, ap=AP5095)
         if self.save_history_ckpt:
-            self.save_ckpt(f"epoch_{self.epoch + 1}", ap=ap50_95)
+            self.save_ckpt(f"epoch_{self.epoch + 1}", ap=AP5095)
 
     def save_ckpt(self, ckpt_name, update_best_ckpt=False, ap=None):
         if self.rank == 0:

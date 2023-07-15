@@ -186,7 +186,7 @@ def main(exp: Exp, args):
     print("\n @@@@@@ visualize_assign Start @@@@@@ \n")
     os.system(
         "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/visualize_assign.py", args.exp_file
+            "/ai/mnt/code/YOLOX/visualize_assign.py", output_exp_file
         )
     )
     print("\n @@@@@@ visualize_assign Done @@@@@@ \n")
@@ -194,7 +194,7 @@ def main(exp: Exp, args):
     print("\n ####### infer_show Start ###### \n")
     os.system(
         "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/infer_show.py", args.exp_file
+            "/ai/mnt/code/YOLOX/infer_show.py", output_exp_file
         )
     )
     print("\n ####### infer_show Done ###### \n")

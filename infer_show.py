@@ -29,7 +29,7 @@ def make_parser():
 
     parser.add_argument(
         "--path",
-        default="/ai/mnt/data/stenosis/selected/Degree/FOLD0/",
+        default="/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO",
         help="path to images or video",
     )
     parser.add_argument("--camid", type=int, default=0, help="webcam demo camera id")

@@ -73,7 +73,7 @@ def assign_vis_parser():
         type=str,
         help="url used to set up distributed training",
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=2, help="batch size")
+    parser.add_argument("-b", "--batch-size", type=int, default=1, help="batch size")
     parser.add_argument(
         "-d", "--devices", default=0, type=int, help="device for training"
     )

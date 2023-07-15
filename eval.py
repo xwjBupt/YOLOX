@@ -12,6 +12,7 @@ import torch
 import torch.backends.cudnn as cudnn
 from torch.nn.parallel import DistributedDataParallel as DDP
 import csv
+import time
 from yolox.core import launch
 from yolox.exp import get_exp
 from yolox.utils import (
@@ -141,7 +142,7 @@ def main(exp, args, num_gpu):
         )
 
     is_distributed = num_gpu > 1
-
+    timestamp = time.strftime("%m_%d-%H_%M", time.localtime())
     # set environment variables for distributed training
     configure_nccl()
     cudnn.benchmark = True
@@ -152,7 +153,7 @@ def main(exp, args, num_gpu):
 
     if rank == 0:
         os.makedirs(file_name, exist_ok=True)
-
+    ExpName = file_name.split("/")[-1]
     setup_logger(file_name, distributed_rank=rank, filename="val_log.txt", mode="a")
     logger.info("Args: {}".format(args))
 
@@ -220,7 +221,7 @@ def main(exp, args, num_gpu):
     )
     csvname = "/ai/mnt/code/YOLOX/Binay_AP.csv"
     csv_content = dict(
-        ExpName=exp.exp_name,
+        ExpName=ExpName,
         AP5095=results[0],
         AP50=results[1],
         AP75=results[2],
@@ -232,6 +233,7 @@ def main(exp, args, num_gpu):
         AR5095Medium=results[10],
         AR5095Large=results[11],
         Box_Contain_Thresh=exp.box_contain_thresh,
+        Timestamp=timestamp,
     )
     write_to_csv(csvname, csv_content)
     logger.info("\n" + summary)

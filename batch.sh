@@ -1,0 +1,4 @@
+python /ai/mnt/code/YOLOX/infer_show.py -f /ai/mnt/code/YOLOX/output_runs/Binary/07_14-11_06@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-clip0.25-cutcopy_ex10-siou/main_yolox_base_stenosis_binary_copy.py
+python /ai/mnt/code/YOLOX/infer_show.py -f /ai/mnt/code/YOLOX/output_runs/Binary/07_14-17_24@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-clip0.25-cutcopy_ex10-giou/main_yolox_base_stenosis_binary_copy.py
+python /ai/mnt/code/YOLOX/infer_show.py -f /ai/mnt/code/YOLOX/output_runs/Binary/07_14-23_04@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-clip0.25-cutcopy_ex10-ciou/main_yolox_base_stenosis_binary_copy.py
+# python /ai/mnt/code/YOLOX/infer_show.py -f 

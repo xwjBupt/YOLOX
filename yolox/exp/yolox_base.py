@@ -27,6 +27,7 @@ class Exp(BaseExp):
         # activation name. For example, if using "relu", then "silu" will be replaced to "relu".
         self.act = "silu"
         self.iou_type = "giou"
+        self.box_contain_thresh = 0.1
 
         # ---------------- dataloader config ---------------- #
         # set worker to 4 for shorter dataloader init time
@@ -354,7 +355,9 @@ class Exp(BaseExp):
 
         return val_loader
 
-    def get_evaluator(self, batch_size, is_distributed, testdev=False, legacy=False):
+    def get_evaluator(
+        self, batch_size, is_distributed, testdev=False, legacy=False, **kwargs
+    ):
         from yolox.evaluators import COCOEvaluator
 
         return COCOEvaluator(
@@ -366,6 +369,7 @@ class Exp(BaseExp):
             nmsthre=self.nmsthre,
             num_classes=self.num_classes,
             testdev=testdev,
+            box_contain_thresh=self.box_contain_thresh,
         )
 
     def get_trainer(self, args):

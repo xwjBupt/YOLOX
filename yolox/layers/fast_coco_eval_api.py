@@ -21,9 +21,10 @@ class COCOeval_opt(COCOeval):
     and accumulate() are implemented in C++ to speedup evaluation
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, box_contain_thresh, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.module = FastCOCOEvalOp().load()
+        self.box_contain_thresh = box_contain_thresh
 
     def evaluate(self):
         """
@@ -265,10 +266,10 @@ class COCOeval_opt(COCOeval):
         # compute iou between each dt and gt region
         iscrowd = [int(o["iscrowd"]) for o in gt]
         ious = maskUtils.iou(d, g, iscrowd)
-        ious = self.update_ious(d, g, ious)
+        ious = self.update_ious(d, g, ious, self.box_contain_thresh)
         return ious
 
-    def update_ious(self, d, g, ious):
+    def update_ious(self, d, g, ious, box_contain_thresh=0.1):
         raw_ious = copy.deepcopy(ious)
         for dindex, di in enumerate(d):
             for gindex, gi in enumerate(g):
@@ -302,7 +303,7 @@ class COCOeval_opt(COCOeval):
                     if gcontainb:
                         ious[dindex][gindex] = 0.95
                     else:
-                        if ious[dindex][gindex] > 0.1:
+                        if ious[dindex][gindex] > box_contain_thresh:
                             ious[dindex][gindex] = max(0.5, ious[dindex][gindex])
 
                 # if bing or ginb:

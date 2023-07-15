@@ -11,7 +11,7 @@ import glob
 import torch
 import torch.backends.cudnn as cudnn
 from torch.nn.parallel import DistributedDataParallel as DDP
-
+import csv
 from yolox.core import launch
 from yolox.exp import get_exp
 from yolox.utils import (
@@ -22,6 +22,15 @@ from yolox.utils import (
     get_model_info,
     setup_logger,
 )
+
+
+def write_to_csv(filename, content):
+    file_exist = os.path.exists(filename)
+    with open(filename, "a+", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=content.keys())
+        if not file_exist:
+            writer.writeheader()
+        writer.writerow(content)
 
 
 def make_parser():
@@ -52,7 +61,7 @@ def make_parser():
     parser.add_argument(
         "-f",
         "--exp_file",
-        default="/ai/mnt/code/YOLOX/output_runs/Degree/07_11-23_52@YOLOX-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10-giou/main_yolox_base_stenosis_degree_copy.py",
+        default="/ai/mnt/code/YOLOX/output_runs/Binary/06_28-16_28@YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex10/main_yolox_base_stenosis_binary_copy.py",
         type=str,
         help="please input your experiment description file",
     )
@@ -64,6 +73,9 @@ def make_parser():
         help="ckpt for eval",
     )
     parser.add_argument("--conf", default=None, type=float, help="test conf")
+    parser.add_argument(
+        "--box_contain_thresh", default=None, type=float, help="box_contain_thresh"
+    )
     parser.add_argument("--nms", default=None, type=float, help="test nms threshold")
     parser.add_argument("--tsize", default=None, type=int, help="test img size")
     parser.add_argument("--seed", default=None, type=int, help="eval seed")
@@ -148,6 +160,8 @@ def main(exp, args, num_gpu):
         exp.test_conf = args.conf
     if args.nms is not None:
         exp.nmsthre = args.nms
+    if args.box_contain_thresh is not None:
+        exp.box_contain_thresh = args.box_contain_thresh
     if args.tsize is not None:
         exp.test_size = (args.tsize, args.tsize)
     if args.ckpt is None:
@@ -201,10 +215,28 @@ def main(exp, args, num_gpu):
         decoder = None
 
     # start evaluate
-    *_, summary = evaluator.evaluate(
+    results, summary = evaluator.evaluate(
         model, is_distributed, args.fp16, trt_file, decoder, exp.test_size
     )
+    csvname = "/ai/mnt/code/YOLOX/Binay_AP.csv"
+    csv_content = dict(
+        ExpName=exp.exp_name,
+        AP5095=results[0],
+        AP50=results[1],
+        AP75=results[2],
+        AP5095Small=results[3],
+        AP5095Medium=results[4],
+        AP5095Large=results[5],
+        AR5095All=results[8],
+        AR5095Small=results[9],
+        AR5095Medium=results[10],
+        AR5095Large=results[11],
+        Box_Contain_Thresh=exp.box_contain_thresh,
+    )
+    write_to_csv(csvname, csv_content)
     logger.info("\n" + summary)
+    logger.info("Write {} to csv to {}".format(csv_content, csvname))
+    return results
 
 
 if __name__ == "__main__":

@@ -263,17 +263,3 @@ if __name__ == "__main__":
         dist_url=dist_url,
         args=(exp, args, num_gpu),
     )
-    print("\n @@@@@@ visualize_assign Start @@@@@@ \n")
-    os.system(
-        "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/visualize_assign.py", args.exp_file
-        )
-    )
-    print("\n @@@@@@ visualize_assign Done @@@@@@ \n")
-    print("\n ####### infer_show Start ###### \n")
-    os.system(
-        "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/infer_show.py", args.exp_file
-        )
-    )
-    print("\n ####### infer_show Done ###### \n")

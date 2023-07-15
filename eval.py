@@ -237,7 +237,7 @@ def main(exp, args, num_gpu):
     )
     write_to_csv(csvname, csv_content)
     logger.info("\n" + summary)
-    logger.info("Write {} to csv to {}".format(csv_content, csvname))
+    logger.info("Write {} to csv to {}\n\n".format(csv_content, csvname))
     return results
 
 

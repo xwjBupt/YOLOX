@@ -11,7 +11,8 @@ import glob
 import torch
 import torch.backends.cudnn as cudnn
 from torch.nn.parallel import DistributedDataParallel as DDP
-
+import csv
+import time
 from yolox.core import launch
 from yolox.exp import get_exp
 from yolox.utils import (
@@ -22,6 +23,15 @@ from yolox.utils import (
     get_model_info,
     setup_logger,
 )
+
+
+def write_to_csv(filename, content):
+    file_exist = os.path.exists(filename)
+    with open(filename, "a+", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=content.keys())
+        if not file_exist:
+            writer.writeheader()
+        writer.writerow(content)
 
 
 def make_parser():
@@ -39,6 +49,7 @@ def make_parser():
         type=str,
         help="url used to set up distributed training",
     )
+    parser.add_argument("-b", "--batch-size", type=int, default=1, help="batch size")
     parser.add_argument("-b", "--batch-size", type=int, default=1, help="batch size")
     parser.add_argument(
         "-d", "--devices", default=None, type=int, help="device for training"
@@ -64,6 +75,9 @@ def make_parser():
         help="ckpt for eval",
     )
     parser.add_argument("--conf", default=None, type=float, help="test conf")
+    parser.add_argument(
+        "--box_contain_thresh", default=None, type=float, help="box_contain_thresh"
+    )
     parser.add_argument("--nms", default=None, type=float, help="test nms threshold")
     parser.add_argument("--tsize", default=None, type=int, help="test img size")
     parser.add_argument("--seed", default=None, type=int, help="eval seed")
@@ -129,7 +143,7 @@ def main(exp, args, num_gpu):
         )
 
     is_distributed = num_gpu > 1
-
+    timestamp = time.strftime("%m_%d-%H_%M", time.localtime())
     # set environment variables for distributed training
     configure_nccl()
     cudnn.benchmark = True
@@ -140,7 +154,7 @@ def main(exp, args, num_gpu):
 
     if rank == 0:
         os.makedirs(file_name, exist_ok=True)
-
+    ExpName = file_name.split("/")[-1]
     setup_logger(file_name, distributed_rank=rank, filename="val_log.txt", mode="a")
     logger.info("Args: {}".format(args))
 
@@ -148,6 +162,8 @@ def main(exp, args, num_gpu):
         exp.test_conf = args.conf
     if args.nms is not None:
         exp.nmsthre = args.nms
+    if args.box_contain_thresh is not None:
+        exp.box_contain_thresh = args.box_contain_thresh
     if args.tsize is not None:
         exp.test_size = (args.tsize, args.tsize)
     if args.ckpt is None:
@@ -201,10 +217,29 @@ def main(exp, args, num_gpu):
         decoder = None
 
     # start evaluate
-    *_, summary = evaluator.evaluate(
+    results, summary = evaluator.evaluate(
         model, is_distributed, args.fp16, trt_file, decoder, exp.test_size
     )
+    csvname = "/ai/mnt/code/YOLOX/Binay_AP.csv"
+    csv_content = dict(
+        ExpName=ExpName,
+        AP5095=results[0],
+        AP50=results[1],
+        AP75=results[2],
+        AP5095Small=results[3],
+        AP5095Medium=results[4],
+        AP5095Large=results[5],
+        AR5095All=results[8],
+        AR5095Small=results[9],
+        AR5095Medium=results[10],
+        AR5095Large=results[11],
+        Box_Contain_Thresh=exp.box_contain_thresh,
+        Timestamp=timestamp,
+    )
+    write_to_csv(csvname, csv_content)
     logger.info("\n" + summary)
+    logger.info("Write {} to csv to {}".format(csv_content, csvname))
+    return results
 
 
 if __name__ == "__main__":

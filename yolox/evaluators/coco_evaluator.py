@@ -108,6 +108,7 @@ class COCOEvaluator:
         testdev: bool = False,
         per_class_AP: bool = True,
         per_class_AR: bool = True,
+        box_contain_thresh: float = 0.1,
     ):
         """
         Args:
@@ -128,6 +129,7 @@ class COCOEvaluator:
         self.testdev = testdev
         self.per_class_AP = per_class_AP
         self.per_class_AR = per_class_AR
+        self.box_contain_thresh = box_contain_thresh
 
     def evaluate(
         self,
@@ -301,7 +303,9 @@ class COCOEvaluator:
                 )
             ]
         )
-
+        time_info = time_info + ", eval at box_contain_thresh as {}".format(
+            self.box_contain_thresh
+        )
         info = time_info + "\n"
 
         # Evaluate the Dt (detection) json comparing with the ground truth
@@ -322,7 +326,7 @@ class COCOEvaluator:
 
                 logger.warning("Use standard COCOeval.")
 
-            cocoEval = COCOeval(cocoGt, cocoDt, annType[1])
+            cocoEval = COCOeval(self.box_contain_thresh, cocoGt, cocoDt, annType[1])
             # cocoEval.params.maxDets = [1, 5, 50]
             # cocoEval.params.iouThrs = np.linspace(
             #     0.1, 0.95, int(np.round((0.95 - 0.1) / 0.05)) + 1, endpoint=True
@@ -332,6 +336,7 @@ class COCOEvaluator:
             redirect_string = io.StringIO()
             with contextlib.redirect_stdout(redirect_string):
                 cocoEval.summarize()  # TODO modity
+
             info += redirect_string.getvalue()
             cat_ids = list(cocoGt.cats.keys())
             cat_names = [cocoGt.cats[catId]["name"] for catId in sorted(cat_ids)]
@@ -341,14 +346,15 @@ class COCOEvaluator:
             if self.per_class_AR:
                 AR_table = per_class_AR_table(cocoEval, class_names=cat_names)
                 info += "per class AR:\n" + AR_table + "\n"
-            return (
-                cocoEval.stats[0],
-                cocoEval.stats[1],
-                cocoEval.stats[-2],
-                cocoEval.stats[-3],
-                cocoEval.stats[-4],
-                cocoEval.stats[-5],
-                info,
-            )
+            # return (
+            #     cocoEval.stats[0],
+            #     cocoEval.stats[1],
+            #     cocoEval.stats[-2],
+            #     cocoEval.stats[-3],
+            #     cocoEval.stats[-4],
+            #     cocoEval.stats[-5],
+            #     info,
+            # )
+            return cocoEval.stats, info
         else:
             return 0, 0, info

@@ -70,6 +70,8 @@ class Trainer:
             os.makedirs(self.file_name, exist_ok=True)
         if not os.path.exists(self.output_exp_file):
             shutil.copyfile(args.exp_file, self.output_exp_file)
+        if not os.path.exists(self.output_exp_file):
+            shutil.copyfile(args.exp_file, self.output_exp_file)
         setup_logger(
             self.file_name,
             distributed_rank=self.rank,
@@ -85,6 +87,7 @@ class Trainer:
             raise
         finally:
             self.after_train()
+        return self.output_exp_file
         return self.output_exp_file
 
     def train_in_epoch(self):
@@ -230,6 +233,11 @@ class Trainer:
         if (self.epoch + 1) % self.exp.eval_interval == 0:
             all_reduce_norm(self.model)
             self.evaluate_and_save_model()
+        logger.info(
+            "current best AP is {:.2f} @ epoch {}".format(
+                self.best_ap * 100, self.epoch + 1
+            )
+        )
         logger.info(
             "current best AP is {:.2f} @ epoch {}".format(
                 self.best_ap * 100, self.epoch + 1

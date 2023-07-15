@@ -12,7 +12,6 @@ class Exp(MyExp):
         self.depth = 1.33
         self.width = 1.25
         self.nmsthre = 0.35
-        self.iou_type = "siou"
         self.input_size = (1024, 1024)
         self.test_size = (1024, 1024)
         self.multiscale_range = 8
@@ -34,14 +33,14 @@ class Exp(MyExp):
         self.cut_copy_dict = dict(
             iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0.25
         )
-        self.clip_dict = dict(low=48, high=192, p=0)
+        self.clip_dict = dict(low=48, high=192, p=0.25)
         # Define yourself dataset path
         self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO"
         self.train_ann = "train_binary.json"
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-siou"
+        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip"
         self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
         self.num_classes = 1
         self.max_epoch = 100

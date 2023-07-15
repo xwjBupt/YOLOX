@@ -49,8 +49,7 @@ def make_parser():
         type=str,
         help="url used to set up distributed training",
     )
-    parser.add_argument("-b", "--batch-size", type=int, default=1, help="batch size")
-    parser.add_argument("-b", "--batch-size", type=int, default=1, help="batch size")
+    parser.add_argument("-b", "--batch-size", type=int, default=2, help="batch size")
     parser.add_argument(
         "-d", "--devices", default=None, type=int, help="device for training"
     )
@@ -238,7 +237,7 @@ def main(exp, args, num_gpu):
     )
     write_to_csv(csvname, csv_content)
     logger.info("\n" + summary)
-    logger.info("Write {} to csv to {}".format(csv_content, csvname))
+    logger.info("Write {} to csv to {}\n\n".format(csv_content, csvname))
     return results
 
 

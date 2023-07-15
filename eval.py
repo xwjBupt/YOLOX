@@ -219,7 +219,7 @@ def main(exp, args, num_gpu):
     results, summary = evaluator.evaluate(
         model, is_distributed, args.fp16, trt_file, decoder, exp.test_size
     )
-    csvname = "/ai/mnt/code/YOLOX/Binay_AP.csv"
+    csvname = "/ai/mnt/code/YOLOX/Degree_AP.csv"
     csv_content = dict(
         ExpName=ExpName,
         AP5095=results[0],
@@ -263,17 +263,3 @@ if __name__ == "__main__":
         dist_url=dist_url,
         args=(exp, args, num_gpu),
     )
-    print("\n @@@@@@ visualize_assign Start @@@@@@ \n")
-    os.system(
-        "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/visualize_assign.py", args.exp_file
-        )
-    )
-    print("\n @@@@@@ visualize_assign Done @@@@@@ \n")
-    print("\n ####### infer_show Start ###### \n")
-    os.system(
-        "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/infer_show.py", args.exp_file
-        )
-    )
-    print("\n ####### infer_show Done ###### \n")

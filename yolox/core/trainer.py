@@ -239,11 +239,6 @@ class Trainer:
                 self.best_ap * 100, self.best_ap_epoch
             )
         )
-        logger.info(
-            "current best AP is {:.2f} @ epoch {}".format(
-                self.best_ap * 100, self.epoch + 1
-            )
-        )
 
     def before_iter(self):
         pass

@@ -226,3 +226,10 @@ events.out.tfevents*
 .Trashes
 ehthumbs.db
 Thumbs.db
+output_runs/*
+*.png
+artifacts/*
+tools/wandb/*
+tools/artifacts/*
+wandb/*
+*.csv

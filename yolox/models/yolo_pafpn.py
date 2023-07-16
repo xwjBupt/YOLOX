@@ -22,9 +22,12 @@ class YOLOPAFPN(nn.Module):
         in_channels=[256, 512, 1024],
         depthwise=False,
         act="silu",
+        use_cab=False,
     ):
         super().__init__()
-        self.backbone = CSPDarknet(depth, width, depthwise=depthwise, act=act)
+        self.backbone = CSPDarknet(
+            depth, width, depthwise=depthwise, act=act, use_cab=False
+        )
         self.in_features = in_features
         self.in_channels = in_channels
         Conv = DWConv if depthwise else BaseConv
@@ -40,6 +43,7 @@ class YOLOPAFPN(nn.Module):
             False,
             depthwise=depthwise,
             act=act,
+            use_cab=use_cab,
         )  # cat
 
         self.reduce_conv1 = BaseConv(
@@ -52,6 +56,7 @@ class YOLOPAFPN(nn.Module):
             False,
             depthwise=depthwise,
             act=act,
+            use_cab=use_cab,
         )
 
         # bottom-up conv
@@ -65,6 +70,7 @@ class YOLOPAFPN(nn.Module):
             False,
             depthwise=depthwise,
             act=act,
+            use_cab=use_cab,
         )
 
         # bottom-up conv
@@ -78,6 +84,7 @@ class YOLOPAFPN(nn.Module):
             False,
             depthwise=depthwise,
             act=act,
+            use_cab=use_cab,
         )
 
     def forward(self, input):

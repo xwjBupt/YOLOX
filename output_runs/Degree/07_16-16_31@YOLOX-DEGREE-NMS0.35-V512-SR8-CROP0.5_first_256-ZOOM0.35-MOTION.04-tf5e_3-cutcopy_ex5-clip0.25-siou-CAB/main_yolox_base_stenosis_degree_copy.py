@@ -54,4 +54,4 @@ class Exp(MyExp):
         self.iou_type = "siou"
         self.box_contain_thresh = 0.1
         self.use_cab = True
-        self.basic_lr_per_img = 0.01 / 16.0  # 0.01 / 64.0
+        self.basic_lr_per_img = 0.01 / 16.0

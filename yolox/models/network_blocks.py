@@ -4,6 +4,7 @@
 
 import torch
 import torch.nn as nn
+from .cab import CAB
 
 
 class SiLU(nn.Module):
@@ -110,12 +111,17 @@ class ResLayer(nn.Module):
         self.layer1 = BaseConv(
             in_channels, mid_channels, ksize=1, stride=1, act="lrelu"
         )
+        self.cab = None
+        # self.cab = CAB(mid_channels, mid_channels)
         self.layer2 = BaseConv(
             mid_channels, in_channels, ksize=3, stride=1, act="lrelu"
         )
 
     def forward(self, x):
-        out = self.layer2(self.layer1(x))
+        if self.cab is None:
+            out = self.layer2(self.layer1(x))
+        else:
+            out = self.layer2(self.cab(self.layer1(x)))
         return x + out
 
 
@@ -156,6 +162,7 @@ class CSPLayer(nn.Module):
         expansion=0.5,
         depthwise=False,
         act="silu",
+        use_cab=False,
     ):
         """
         Args:
@@ -169,6 +176,10 @@ class CSPLayer(nn.Module):
         self.conv1 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
         self.conv2 = BaseConv(in_channels, hidden_channels, 1, stride=1, act=act)
         self.conv3 = BaseConv(2 * hidden_channels, out_channels, 1, stride=1, act=act)
+        if use_cab:
+            self.cab = CAB(out_channels, out_channels)
+        else:
+            self.cab = None
         module_list = [
             Bottleneck(
                 hidden_channels, hidden_channels, shortcut, 1.0, depthwise, act=act
@@ -182,7 +193,10 @@ class CSPLayer(nn.Module):
         x_2 = self.conv2(x)
         x_1 = self.m(x_1)
         x = torch.cat((x_1, x_2), dim=1)
-        return self.conv3(x)
+        x = self.conv3(x)
+        if self.cab:
+            x = self.cab(x)
+        return x
 
 
 class Focus(nn.Module):

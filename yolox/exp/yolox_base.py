@@ -28,6 +28,7 @@ class Exp(BaseExp):
         self.act = "silu"
         self.iou_type = "giou"
         self.box_contain_thresh = 0.1
+        self.use_cab = False
 
         # ---------------- dataloader config ---------------- #
         # set worker to 4 for shorter dataloader init time
@@ -133,7 +134,11 @@ class Exp(BaseExp):
         if getattr(self, "model", None) is None:
             in_channels = [256, 512, 1024]
             backbone = YOLOPAFPN(
-                self.depth, self.width, in_channels=in_channels, act=self.act
+                self.depth,
+                self.width,
+                in_channels=in_channels,
+                act=self.act,
+                use_cab=self.use_cab,
             )
             head = YOLOXHead(
                 self.num_classes,

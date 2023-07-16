@@ -13,7 +13,7 @@ from yolox.utils import bboxes_iou, cxcywh2xyxy, meshgrid, visualize_assign
 
 from .losses import IOUloss
 from .network_blocks import BaseConv, DWConv
-
+from .cab import CAB
 
 # class FocalLoss(nn.Module):
 #     """Multi-class Focal loss implementation"""
@@ -81,6 +81,7 @@ class YOLOXHead(nn.Module):
         act="silu",
         iou_type="iou",
         depthwise=False,
+        use_cab=False,
     ):
         """
         Args:
@@ -477,7 +478,7 @@ class YOLOXHead(nn.Module):
             else:
                 loss_l1 = 0.0
         except Exception as e:
-            print (e)
+            print(e)
 
         reg_weight = 5.0
         loss = (

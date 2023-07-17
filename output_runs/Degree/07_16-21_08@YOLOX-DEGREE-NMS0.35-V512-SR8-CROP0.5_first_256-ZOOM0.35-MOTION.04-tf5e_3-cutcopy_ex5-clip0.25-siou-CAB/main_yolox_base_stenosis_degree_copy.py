@@ -9,38 +9,10 @@ from yolox.exp import Exp as MyExp
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        MODELNAME = "YOLOX#L"
-        if MODELNAME == "YOLOX":
-            self.depth = 1.33
-            self.width = 1.25
-            self.data_num_workers = 4
-            self.batch_size = 2
-        elif MODELNAME == "YOLOX#L":
-            self.depth = 1.0
-            self.width = 1.0
-            self.data_num_workers = 6
-            self.batch_size = 3
-        elif MODELNAME == "YOLOX#M":
-            self.depth = 0.67
-            self.width = 0.75
-            self.data_num_workers = 8
-            self.batch_size = 4
-        elif MODELNAME == "YOLOX#S":
-            self.depth = 0.33
-            self.width = 0.50
-            self.data_num_workers = 12
-            self.batch_size = 6
-        elif MODELNAME == "YOLOX#T":
-            self.depth = 0.33
-            self.width = 0.375
-            self.input_size = (416, 416)
-            self.mosaic_scale = (0.5, 1.5)
-            self.random_size = (10, 20)
-            self.test_size = (416, 416)
-        else:
-            assert False, "{} do not support yet"
+        self.depth = 1.33
+        self.width = 1.25
         self.nmsthre = 0.35
-        self.input_size = (1024, 1024)
+        self.input_size = (512, 512)
         self.test_size = (1024, 1024)
         self.multiscale_range = 8
         self.crop_dict = dict(
@@ -68,19 +40,18 @@ class Exp(MyExp):
         self.val_ann = "val_degree.json"
         self.test_ann = "val_degree.json"
         self.fold = "FOLD0"
-        self.exp_name = (
-            "%s-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou"
-            % MODELNAME
-        )
+        self.exp_name = "YOLOX-DEGREE-NMS0.35-V512-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-CAB"
         self.output_dir = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Degree", self.exp_name
         )
         self.num_classes = 3
         self.max_epoch = 100
+        self.data_num_workers = 4
+        self.batch_size = 2
         self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150
         self.iou_type = "siou"
         self.box_contain_thresh = 0.1
-        self.use_cab = False
-        # self.basic_lr_per_img = 0.01 / 16.0  # 0.01 / 64.0
+        self.use_cab = True
+        self.basic_lr_per_img = 0.01 / 16.0  # 0.01 / 64.0

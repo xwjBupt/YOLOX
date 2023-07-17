@@ -9,7 +9,7 @@ from yolox.exp import Exp as MyExp
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        MODELNAME = "YOLOX#M"
+        MODELNAME = "YOLOX#L"
         if MODELNAME == "YOLOX":
             self.depth = 1.33
             self.width = 1.25

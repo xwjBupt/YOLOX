@@ -14,3 +14,4 @@ class Exp(MyExp):
         self.width = 1.25
         self.exp_name = os.path.split(os.path.realpath(__file__))[1].split(".")[0]
         self.use_cab = True
+        self.print_interval = 1000

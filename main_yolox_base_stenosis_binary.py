@@ -9,8 +9,39 @@ from yolox.exp import Exp as MyExp
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        self.depth = 1.33
-        self.width = 1.25
+        MODELNAME = "YOLOX#M"
+        if MODELNAME == "YOLOX":
+            self.depth = 1.33
+            self.width = 1.25
+            self.data_num_workers = 4
+            self.batch_size = 2
+            self.ckpt = "/ai/mnt/code/YOLOX/yolox/models/yolox.pth"
+        elif MODELNAME == "YOLOX#L":
+            self.depth = 1.0
+            self.width = 1.0
+            self.data_num_workers = 6
+            self.batch_size = 3
+            self.ckpt = "/ai/mnt/code/YOLOX/yolox/models/yolox_l.pth"
+        elif MODELNAME == "YOLOX#M":
+            self.depth = 0.67
+            self.width = 0.75
+            self.data_num_workers = 8
+            self.batch_size = 4
+            self.ckpt = "/ai/mnt/code/YOLOX/yolox/models/yolox_m.pth"
+        elif MODELNAME == "YOLOX#S":
+            self.depth = 0.33
+            self.width = 0.50
+            self.data_num_workers = 12
+            self.batch_size = 6
+        elif MODELNAME == "YOLOX#T":
+            self.depth = 0.33
+            self.width = 0.375
+            self.input_size = (416, 416)
+            self.mosaic_scale = (0.5, 1.5)
+            self.random_size = (10, 20)
+            self.test_size = (416, 416)
+        else:
+            assert False, "{} do not support yet"
         self.nmsthre = 0.35
         self.iou_type = "siou"
         self.input_size = (1024, 1024)
@@ -34,15 +65,20 @@ class Exp(MyExp):
         self.cut_copy_dict = dict(
             iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0.25
         )
-        self.clip_dict = dict(low=48, high=192, p=0)
+        self.clip_dict = dict(low=48, high=192, p=0.25)
         # Define yourself dataset path
         self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO"
         self.train_ann = "train_binary.json"
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
-        self.exp_name = "YOLOX-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-siou"
-        self.output_dir = os.path.join("/ai/mnt/code/YOLOX/output_runs", self.exp_name)
+        self.exp_name = (
+            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou"
+            % MODELNAME
+        )
+        self.output_dir = os.path.join(
+            "/ai/mnt/code/YOLOX/output_runs/Binary", self.exp_name
+        )
         self.num_classes = 1
         self.max_epoch = 100
         self.data_num_workers = 4

@@ -208,6 +208,7 @@ if __name__ == "__main__":
     exp.merge(args.opts)
     check_exp_value(exp)
     args.batch_size = exp.batch_size
+    args.ckpt = exp.ckpt
     exp.exp_name = timestamp + "@" + exp.exp_name
     if not args.experiment_name:
         args.experiment_name = exp.exp_name

@@ -15,19 +15,16 @@ class Exp(MyExp):
             self.width = 1.25
             self.data_num_workers = 4
             self.batch_size = 2
-            self.ckpt = "/ai/mnt/code/YOLOX/yolox/models/yolox.pth"
         elif MODELNAME == "YOLOX#L":
             self.depth = 1.0
             self.width = 1.0
             self.data_num_workers = 6
             self.batch_size = 3
-            self.ckpt = "/ai/mnt/code/YOLOX/yolox/models/yolox_l.pth"
         elif MODELNAME == "YOLOX#M":
             self.depth = 0.67
             self.width = 0.75
             self.data_num_workers = 8
             self.batch_size = 4
-            self.ckpt = "/ai/mnt/code/YOLOX/yolox/models/yolox_m.pth"
         elif MODELNAME == "YOLOX#S":
             self.depth = 0.33
             self.width = 0.50
@@ -86,5 +83,4 @@ class Exp(MyExp):
         self.iou_type = "siou"
         self.box_contain_thresh = 0.1
         self.use_cab = False
-
         # self.basic_lr_per_img = 0.01 / 16.0  # 0.01 / 64.0

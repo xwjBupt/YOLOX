@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from yolox.utils import bboxes_iou, cxcywh2xyxy, meshgrid, visualize_assign
 
-from .losses import IOUloss
+from .losses import IOUloss, IOU_SSIM
 from .network_blocks import BaseConv, DWConv
 
 
@@ -80,6 +80,7 @@ class YOLOXHead(nn.Module):
         in_channels=[256, 512, 1024],
         act="silu",
         iou_type="iou",
+        cal_thresh=0.3,
         depthwise=False,
     ):
         """
@@ -181,7 +182,9 @@ class YOLOXHead(nn.Module):
         self.use_l1 = False
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
-        # self.focal = BCEFocalLoss(gamma=2)
+        self.iou_similarity = IOU_SSIM(
+            reduction="none", cal_thresh=cal_thresh, size=(32, 32)
+        )
         self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
@@ -431,9 +434,14 @@ class YOLOXHead(nn.Module):
             if self.use_l1:
                 l1_targets.append(l1_target)
 
+        batch_idx_reg_targets = reg_targets
+        batch_idx_pred_targets = [
+            bbox_preds[i][fg_masks[i]] for i in range(bbox_preds.shape[0])
+        ]
         cls_targets = torch.cat(cls_targets, 0)
         reg_targets = torch.cat(reg_targets, 0)
         obj_targets = torch.cat(obj_targets, 0)
+
         fg_masks = torch.cat(fg_masks, 0)
         if self.use_l1:
             l1_targets = torch.cat(l1_targets, 0)
@@ -442,6 +450,11 @@ class YOLOXHead(nn.Module):
         loss_iou = (
             self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
         ).sum() / num_fg
+
+        loss_iou_similarity = (
+            self.iou_similarity(batch_idx_pred_targets, batch_idx_reg_targets, imgs)
+            / num_fg
+        )
         # loss_obj = (
         #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
         # ).sum() / num_fg
@@ -477,7 +490,7 @@ class YOLOXHead(nn.Module):
             else:
                 loss_l1 = 0.0
         except Exception as e:
-            print (e)
+            print(e)
 
         reg_weight = 5.0
         loss = (
@@ -487,6 +500,7 @@ class YOLOXHead(nn.Module):
             + loss_l1
             + loss_obj_focal
             + loss_cls_focal
+            + loss_iou_similarity
         )
 
         return (
@@ -495,6 +509,7 @@ class YOLOXHead(nn.Module):
             loss_obj,
             loss_cls,
             loss_l1,
+            loss_iou_similarity,
             loss_obj_focal,
             loss_cls_focal,
             num_fg / max(num_gts, 1),

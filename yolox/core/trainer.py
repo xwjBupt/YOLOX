@@ -59,6 +59,8 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
+        if not args.no_debug:
+            exp.exp_name = "DEBUG@" + exp.exp_name.split("@")[1]
         self.file_name = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Binary", exp.exp_name
         )

@@ -8,6 +8,7 @@ import math
 import torch.nn.functional as F
 from math import exp
 from .ssim import SSIM_Loss
+from termcolor import cprint
 
 # class IOUloss(nn.Module):
 #     def __init__(self, reduction="none", loss_type="giou"):
@@ -520,20 +521,26 @@ class IOU_SSIM(nn.Module):
                                 int(box2[1]) : int(box2[1] + box2[3]),
                                 int(box2[0]) : int(box2[0] + box2[2]),
                             ]
-
-                            if self.size:
-                                gt_patch = F.interpolate(
-                                    gt_patch.unsqueeze(0),
-                                    size=self.size,
-                                    mode="bilinear",
+                            try:
+                                if self.size:
+                                    gt_patch = F.interpolate(
+                                        gt_patch.unsqueeze(0),
+                                        size=self.size,
+                                        mode="bilinear",
+                                    )
+                                    pred_patch = F.interpolate(
+                                        pred_patch.unsqueeze(0),
+                                        size=self.size,
+                                        mode="bilinear",
+                                    )
+                                pred_img_batches.append(pred_patch)
+                                reg_img_batches.append(gt_patch)
+                            except Exception as e:
+                                cprint(
+                                    "GT box as {} -- Pred box as {}".format(box1, box2),
+                                    color="yellow",
                                 )
-                                pred_patch = F.interpolate(
-                                    pred_patch.unsqueeze(0),
-                                    size=self.size,
-                                    mode="bilinear",
-                                )
-                            pred_img_batches.append(pred_patch)
-                            reg_img_batches.append(gt_patch)
+                                continue
                         else:
                             continue
         if len(pred_img_batches) > 0:

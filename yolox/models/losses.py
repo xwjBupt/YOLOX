@@ -509,27 +509,35 @@ class IOU_SSIM(nn.Module):
                 for box2 in batch_idx_pred_target:
                     iou = self.get_two_box_iou(box1, box2)
                     if iou > self.cal_thresh:
-                        gt_patch = imgs[i][
-                            :,
-                            int(box1[1]) : int(box1[1] + box1[3]),
-                            int(box1[0]) : int(box1[0] + box1[2]),
-                        ]
-                        pred_patch = imgs[i][
-                            :,
-                            int(box2[1]) : int(box2[1] + box2[3]),
-                            int(box2[0]) : int(box2[0] + box2[2]),
-                        ]
-                        if self.size:
-                            gt_patch = F.interpolate(
-                                gt_patch.unsqueeze(0), size=self.size, mode="bilinear"
-                            )
-                            pred_patch = F.interpolate(
-                                pred_patch.unsqueeze(0), size=self.size, mode="bilinear"
-                            )
-                        loss = self.mse(pred_patch / 255, gt_patch / 255) + self.ssim(
-                            pred_patch, gt_patch
-                        )
-                        Loss = Loss + loss
+                        if box2[3] > 2 and box2[2] > 2:
+                            gt_patch = imgs[i][
+                                :,
+                                int(box1[1]) : int(box1[1] + box1[3]),
+                                int(box1[0]) : int(box1[0] + box1[2]),
+                            ]
+                            pred_patch = imgs[i][
+                                :,
+                                int(box2[1]) : int(box2[1] + box2[3]),
+                                int(box2[0]) : int(box2[0] + box2[2]),
+                            ]
+
+                            if self.size:
+                                gt_patch = F.interpolate(
+                                    gt_patch.unsqueeze(0),
+                                    size=self.size,
+                                    mode="bilinear",
+                                )
+                                pred_patch = F.interpolate(
+                                    pred_patch.unsqueeze(0),
+                                    size=self.size,
+                                    mode="bilinear",
+                                )
+                            loss = self.mse(
+                                pred_patch / 255, gt_patch / 255
+                            ) + self.ssim(pred_patch, gt_patch)
+                            Loss = Loss + loss
+                        else:
+                            continue
         if isinstance(Loss, int):
             return 0
         else:

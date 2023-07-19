@@ -532,12 +532,19 @@ class IOU_SSIM(nn.Module):
                                     size=self.size,
                                     mode="bilinear",
                                 )
-                            loss = self.mse(
-                                pred_patch / 255, gt_patch / 255
-                            ) + self.ssim(pred_patch, gt_patch)
-                            Loss = Loss + loss
+                            pred_img_batches.append(pred_patch)
+                            reg_img_batches.append(gt_patch)
                         else:
                             continue
+        if len(pred_img_batches) > 0:
+            pred_tensor = torch.cat(pred_img_batches, dim=0)
+            gt_tensor = torch.cat(reg_img_batches, dim=0)
+            loss = self.mse(pred_tensor / 255, gt_tensor / 255) + self.ssim(
+                pred_tensor, gt_tensor
+            )
+            Loss = Loss + loss
+        else:
+            Loss = Loss + 0
         if isinstance(Loss, int):
             return 0
         else:

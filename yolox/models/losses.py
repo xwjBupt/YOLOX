@@ -507,9 +507,9 @@ class IOU_SSIM(nn.Module):
             batch_idx_reg_target = batch_idx_reg_targets[i]
             for box1 in batch_idx_reg_target:
                 for box2 in batch_idx_pred_target:
-                    iou = self.get_two_box_iou(box1, box2)
-                    if iou > self.cal_thresh:
-                        if box2[3] > 2 and box2[2] > 2:
+                    if box2[3] > 2 and box2[2] > 2:
+                        iou = self.get_two_box_iou(box1, box2)
+                        if iou > self.cal_thresh:
                             gt_patch = imgs[i][
                                 :,
                                 int(box1[1]) : int(box1[1] + box1[3]),

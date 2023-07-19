@@ -9,7 +9,7 @@ from yolox.exp import Exp as MyExp
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        MODELNAME = "YOLOX#M"
+        MODELNAME = "YOLOX"
         if MODELNAME == "YOLOX":
             self.depth = 1.33
             self.width = 1.25
@@ -25,8 +25,8 @@ class Exp(MyExp):
         elif MODELNAME == "YOLOX#M":
             self.depth = 0.67
             self.width = 0.75
-            self.data_num_workers = 12
-            self.batch_size = 6
+            self.data_num_workers = 8
+            self.batch_size = 4
             self.ckpt = "/ai/mnt/code/YOLOX/yolox/models/yolox_m.pth"
         elif MODELNAME == "YOLOX#S":
             self.depth = 0.33

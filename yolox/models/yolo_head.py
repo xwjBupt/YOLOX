@@ -448,7 +448,9 @@ class YOLOXHead(nn.Module):
 
         num_fg = max(num_fg, 1)
         loss_iou = (
-            self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
+            self.iou_loss(
+                bbox_preds.view(-1, 4)[fg_masks], reg_targets
+            )  # boxformat is cxcywh
         ).sum() / num_fg
 
         loss_iou_similarity = (
@@ -754,7 +756,7 @@ class YOLOXHead(nn.Module):
                     ((y_shifts + 0.5) * expanded_strides).flatten()[fg_mask],
                 ],
                 1,
-            )
+            )  # TODO what is coords?
 
             xyxy_boxes = cxcywh2xyxy(gt_bboxes_per_image)
             save_name = save_prefix + str(batch_idx) + ".png"

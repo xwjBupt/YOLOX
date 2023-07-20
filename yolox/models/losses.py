@@ -496,6 +496,8 @@ class IOU_SSIM(nn.Module):
         batch_idx_reg_targets: list,
         imgs: torch.Tensor,
     ):
+        if self.cal_thresh >= 1:
+            return 0
         assert len(batch_idx_pred_targets) == len(
             batch_idx_reg_targets
         ), "batch do not match"
@@ -512,17 +514,26 @@ class IOU_SSIM(nn.Module):
                     if box2[3] > 2 and box2[2] > 2:
                         iou = self.get_two_box_iou(box1, box2)
                         if iou > self.cal_thresh:
-                            gt_patch = imgs[i][
-                                :,
-                                int(box1[1]) : int(box1[1] + box1[3]),
-                                int(box1[0]) : int(box1[0] + box1[2]),
-                            ]
-                            pred_patch = imgs[i][
-                                :,
-                                int(box2[1]) : int(box2[1] + box2[3]),
-                                int(box2[0]) : int(box2[0] + box2[2]),
-                            ]
                             try:
+                                gt_patch = imgs[i][
+                                    :,
+                                    int(box1[1] - box1[3] / 2) : int(
+                                        box1[1] + box1[3] / 2
+                                    ),
+                                    int(box1[0] - box1[2] / 2) : int(
+                                        box1[0] + box1[2] / 2
+                                    ),
+                                ]
+                                pred_patch = imgs[i][
+                                    :,
+                                    int(box1[1] - box1[3] / 2) : int(
+                                        box1[1] + box1[3] / 2
+                                    ),
+                                    int(box1[0] - box1[2] / 2) : int(
+                                        box1[0] + box1[2] / 2
+                                    ),
+                                ]
+
                                 if self.size:
                                     gt_patch = F.interpolate(
                                         gt_patch.unsqueeze(0),
@@ -538,7 +549,9 @@ class IOU_SSIM(nn.Module):
                                 reg_img_batches.append(gt_patch)
                             except Exception as e:
                                 cprint(
-                                    "GT box as {} -- Pred box as {}".format(box1, box2),
+                                    "GT box as {} -- Pred box as {} in format cxcywh".format(
+                                        box1, box2
+                                    ),
                                     color="yellow",
                                 )
                                 continue

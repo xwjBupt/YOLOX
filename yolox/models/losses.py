@@ -10,6 +10,7 @@ from math import exp
 from .ssim import SSIM_Loss
 from termcolor import cprint
 
+global_index = 0
 # class IOUloss(nn.Module):
 #     def __init__(self, reduction="none", loss_type="giou"):
 #         super(IOUloss, self).__init__()

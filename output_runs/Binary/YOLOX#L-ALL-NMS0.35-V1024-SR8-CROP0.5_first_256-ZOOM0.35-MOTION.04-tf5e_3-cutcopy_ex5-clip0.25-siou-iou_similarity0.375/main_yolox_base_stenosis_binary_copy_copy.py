@@ -74,7 +74,7 @@ class Exp(MyExp):
         self.fold = "FOLD0"
         self.cal_thresh = 0.375
         self.exp_name = (
-            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-iou_similarity0.375_V64"
+            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-iou_similarity0.375"
             % MODELNAME
         )
         self.output_dir = os.path.join(

@@ -470,7 +470,7 @@ class IOU_SSIM(nn.Module):
         reduction="none",
         eps=1e-7,
         cal_thresh=0.3,
-        size=(32, 32),
+        size=(64, 64),
         **kwargs
     ):
         """Setting of the class.

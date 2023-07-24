@@ -456,7 +456,7 @@ class YOLOXHead(nn.Module):
         loss_iou_similarity = (
             self.iou_similarity(batch_idx_pred_targets, batch_idx_reg_targets, imgs)
             / num_fg
-        )
+        ) *0.3
         # loss_obj = (
         #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
         # ).sum() / num_fg

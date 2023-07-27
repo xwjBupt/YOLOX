@@ -183,7 +183,7 @@ class YOLOXHead(nn.Module):
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_similarity = IOU_SSIM(
-            reduction="none", cal_thresh=cal_thresh, size=(32, 32)
+            reduction="none", cal_thresh=cal_thresh, size=(48, 48)
         )
         self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
@@ -456,7 +456,7 @@ class YOLOXHead(nn.Module):
         loss_iou_similarity = (
             self.iou_similarity(batch_idx_pred_targets, batch_idx_reg_targets, imgs)
             / num_fg
-        ) *0.3
+        )
         # loss_obj = (
         #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
         # ).sum() / num_fg

@@ -200,6 +200,7 @@ class WandbLogger(object):
             dir=self.save_dir,
             resume="allow",
             group="BINARY",
+            reinit=True,
         )
         self._wandb_init.update(**kwargs)
 

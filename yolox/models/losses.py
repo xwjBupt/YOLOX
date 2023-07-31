@@ -9,6 +9,8 @@ import torch.nn.functional as F
 from math import exp
 from .ssim import SSIM_Loss
 from termcolor import cprint
+import numpy as np
+import cv2
 
 global_index = 0
 # class IOUloss(nn.Module):
@@ -509,6 +511,7 @@ class IOU_SSIM(nn.Module):
         for i in range(batches):  # TODO
             batch_idx_pred_target = batch_idx_pred_targets[i]
             batch_idx_reg_target = batch_idx_reg_targets[i]
+            H, W = imgs[i].shape[-2], imgs[i].shape[-1]
             for box1 in batch_idx_reg_target:
                 for box2 in batch_idx_pred_target:
                     if box2[3] > 2 and box2[2] > 2:
@@ -517,20 +520,20 @@ class IOU_SSIM(nn.Module):
                             try:
                                 gt_patch = imgs[i][
                                     :,
-                                    int(box1[1] - box1[3] / 2) : int(
-                                        box1[1] + box1[3] / 2
+                                    max(0, int(box1[1] - box1[3] / 2)) : min(
+                                        int(box1[1] + box1[3] / 2), H
                                     ),
-                                    int(box1[0] - box1[2] / 2) : int(
-                                        box1[0] + box1[2] / 2
+                                    max(0, int(box1[0] - box1[2] / 2)) : min(
+                                        int(box1[0] + box1[2] / 2), W
                                     ),
                                 ]
                                 pred_patch = imgs[i][
                                     :,
-                                    int(box2[1] - box2[3] / 2) : int(
-                                        box2[1] + box2[3] / 2
+                                    max(0, int(box2[1] - box2[3] / 2)) : min(
+                                        int(box2[1] + box2[3] / 2), H
                                     ),
-                                    int(box2[0] - box2[2] / 2) : int(
-                                        box2[0] + box2[2] / 2
+                                    max(0, int(box2[0] - box2[2] / 2)) : min(
+                                        int(box2[0] + box2[2] / 2), W
                                     ),
                                 ]
 
@@ -549,14 +552,46 @@ class IOU_SSIM(nn.Module):
                                 reg_img_batches.append(gt_patch)
                             except Exception as e:
                                 cprint(
-                                    "GT box as {} -- Pred box as {} in format cxcywh".format(
-                                        box1, box2
+                                    "GT box as {} -- Pred box as {} in format cxcywh, gt shape with {} pred shape with {}".format(
+                                        box1, box2, gt_patch.shape, pred_patch.shape
                                     ),
                                     color="yellow",
                                 )
                                 continue
-                        else:
-                            continue
+                            # img = imgs[0][0].detach().clone().cpu().numpy().astype(np.uint8)
+                            # cv2.imwrite('/ai/mnt/code/YOLOX/raw.png',img)
+                            # cv2.rectangle(img,(int(box1[0] - box1[2] / 2),int(box1[1] - box1[3] / 2)),(int(box1[0] + box1[2] / 2),int(
+                            #            box1[1] + box1[3] / 2
+                            #        )),color = 45,thickness = 4)
+
+                            # cv2.rectangle(
+                            #    img,
+                            #     (
+                            #         int(box2[0] - box2[2] / 2),
+                            #         int(box2[1] - box2[3] / 2),
+                            #     ),
+                            #     (
+                            #         int(box2[0] + box2[2] / 2),
+                            #         int(box2[1] + box2[3] / 2),
+                            #     ),
+                            #     color=3,
+                            #     thickness=4,
+                            # )
+
+                            # cv2.rectangle(
+                            #    img,
+                            #     (
+                            #         int(box2[1]),
+                            #         int(box2[0]),
+                            #     ),
+                            #     (
+                            #         int(box2[2]),
+                            #         int(box2[3]),
+                            #     ),
+                            #     color=3,
+                            #     thickness=4,
+                            # )
+
         if len(pred_img_batches) > 0:
             pred_tensor = torch.cat(pred_img_batches, dim=0)
             gt_tensor = torch.cat(reg_img_batches, dim=0)

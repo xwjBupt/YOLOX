@@ -447,16 +447,17 @@ class YOLOXHead(nn.Module):
             l1_targets = torch.cat(l1_targets, 0)
 
         num_fg = max(num_fg, 1)
+        loss_iou_similarity = (
+            self.iou_similarity(batch_idx_pred_targets, batch_idx_reg_targets, imgs)
+            / num_fg
+        )
+
         loss_iou = (
             self.iou_loss(
                 bbox_preds.view(-1, 4)[fg_masks], reg_targets
             )  # boxformat is cxcywh
         ).sum() / num_fg
 
-        loss_iou_similarity = (
-            self.iou_similarity(batch_idx_pred_targets, batch_idx_reg_targets, imgs)
-            / num_fg
-        )
         # loss_obj = (
         #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
         # ).sum() / num_fg

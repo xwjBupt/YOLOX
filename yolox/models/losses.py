@@ -526,11 +526,11 @@ class IOU_SSIM(nn.Module):
                                 ]
                                 pred_patch = imgs[i][
                                     :,
-                                    int(box1[1] - box1[3] / 2) : int(
-                                        box1[1] + box1[3] / 2
+                                    int(box2[1] - box2[3] / 2) : int(
+                                        box2[1] + box2[3] / 2
                                     ),
-                                    int(box1[0] - box1[2] / 2) : int(
-                                        box1[0] + box1[2] / 2
+                                    int(box2[0] - box2[2] / 2) : int(
+                                        box2[0] + box2[2] / 2
                                     ),
                                 ]
 

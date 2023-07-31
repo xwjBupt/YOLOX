@@ -73,9 +73,8 @@ class Exp(MyExp):
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
         self.cal_thresh = 0.1
-        self.ssim_size = (16, 16)
         self.exp_name = (
-            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-fixed_iou_similarity0.1_V16"
+            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-iou_similarity0.1"
             % MODELNAME
         )
         self.output_dir = os.path.join(
@@ -88,21 +87,3 @@ class Exp(MyExp):
         self.test_conf = 0.005
         self.eval_interval = 1
         self.print_interval = 150
-        ######
-        # self.mosaic_prob = 0
-        # # prob of applying mixup aug
-        # self.mixup_prob = 0
-        # # prob of applying hsv aug
-        # self.hsv_prob = 0
-        # # prob of applying flip aug
-        # self.flip_prob = 0
-        # # rotation angle range, for example, if set to 2, the true range is (-2, 2)
-        # self.degrees = 0
-        # # translate range, for example, if set to 0.1, the true range is (-0.1, 0.1)
-        # self.translate = 0
-        # self.mosaic_scale = (0.1, 2)
-        # # apply mixup aug or not
-        # self.enable_mixup = False
-        # self.mixup_scale = (0.5, 1.5)
-        # # shear angle range, for example, if set to 2, the true range is (-2, 2)
-        # self.shear = 0

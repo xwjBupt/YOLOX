@@ -81,6 +81,7 @@ class YOLOXHead(nn.Module):
         act="silu",
         iou_type="iou",
         cal_thresh=0.3,
+        ssim_size=(32, 32),
         depthwise=False,
     ):
         """
@@ -183,7 +184,7 @@ class YOLOXHead(nn.Module):
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
         self.iou_similarity = IOU_SSIM(
-            reduction="none", cal_thresh=cal_thresh, size=(16, 16)
+            reduction="none", cal_thresh=cal_thresh, size=ssim_size
         )
         self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides

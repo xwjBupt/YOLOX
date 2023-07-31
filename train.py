@@ -145,7 +145,7 @@ def make_parser():
     parser.add_argument(
         "-l",
         "--logger",
-        default="tensorboard",
+        default="wandb",
         type=str,
         help="Logger to be used for metrics. \
         Implemented loggers include `tensorboard` and `wandb`.",

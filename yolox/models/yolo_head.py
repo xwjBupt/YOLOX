@@ -11,7 +11,7 @@ import torch.nn.functional as F
 
 from yolox.utils import bboxes_iou, cxcywh2xyxy, meshgrid, visualize_assign
 
-from .losses import IOUloss
+from .losses import IOUloss, IOU_SSIM
 from .network_blocks import BaseConv, DWConv
 from .cab import CAB
 
@@ -80,6 +80,8 @@ class YOLOXHead(nn.Module):
         in_channels=[256, 512, 1024],
         act="silu",
         iou_type="iou",
+        cal_thresh=0.3,
+        ssim_size=(32, 32),
         depthwise=False,
         use_cab=False,
     ):
@@ -182,7 +184,9 @@ class YOLOXHead(nn.Module):
         self.use_l1 = False
         self.l1_loss = nn.L1Loss(reduction="none")
         self.bcewithlog_loss = nn.BCEWithLogitsLoss(reduction="none")
-        # self.focal = BCEFocalLoss(gamma=2)
+        self.iou_similarity = IOU_SSIM(
+            reduction="none", cal_thresh=cal_thresh, size=ssim_size
+        )
         self.iou_loss = IOUloss(reduction="none", loss_type=iou_type)
         self.strides = strides
         self.grids = [torch.zeros(1)] * len(in_channels)
@@ -432,17 +436,30 @@ class YOLOXHead(nn.Module):
             if self.use_l1:
                 l1_targets.append(l1_target)
 
+        batch_idx_reg_targets = reg_targets
+        batch_idx_pred_targets = [
+            bbox_preds[i][fg_masks[i]] for i in range(bbox_preds.shape[0])
+        ]
         cls_targets = torch.cat(cls_targets, 0)
         reg_targets = torch.cat(reg_targets, 0)
         obj_targets = torch.cat(obj_targets, 0)
+
         fg_masks = torch.cat(fg_masks, 0)
         if self.use_l1:
             l1_targets = torch.cat(l1_targets, 0)
 
         num_fg = max(num_fg, 1)
+        loss_iou_similarity = (
+            self.iou_similarity(batch_idx_pred_targets, batch_idx_reg_targets, imgs)
+            / num_fg
+        )
+
         loss_iou = (
-            self.iou_loss(bbox_preds.view(-1, 4)[fg_masks], reg_targets)
+            self.iou_loss(
+                bbox_preds.view(-1, 4)[fg_masks], reg_targets
+            )  # boxformat is cxcywh
         ).sum() / num_fg
+
         # loss_obj = (
         #     self.bcewithlog_loss(obj_preds.view(-1, 1), obj_targets)
         # ).sum() / num_fg
@@ -488,6 +505,7 @@ class YOLOXHead(nn.Module):
             + loss_l1
             + loss_obj_focal
             + loss_cls_focal
+            + loss_iou_similarity
         )
 
         return (
@@ -496,6 +514,7 @@ class YOLOXHead(nn.Module):
             loss_obj,
             loss_cls,
             loss_l1,
+            loss_iou_similarity,
             loss_obj_focal,
             loss_cls_focal,
             num_fg / max(num_gts, 1),
@@ -740,7 +759,7 @@ class YOLOXHead(nn.Module):
                     ((y_shifts + 0.5) * expanded_strides).flatten()[fg_mask],
                 ],
                 1,
-            )
+            )  # TODO what is coords?
 
             xyxy_boxes = cxcywh2xyxy(gt_bboxes_per_image)
             save_name = save_prefix + str(batch_idx) + ".png"

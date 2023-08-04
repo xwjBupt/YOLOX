@@ -5,8 +5,14 @@
 import torch
 import torch.nn as nn
 import math
+import torch.nn.functional as F
+from math import exp
+from .ssim import SSIM_Loss
+from termcolor import cprint
+import numpy as np
+import cv2
 
-
+global_index = 0
 # class IOUloss(nn.Module):
 #     def __init__(self, reduction="none", loss_type="giou"):
 #         super(IOUloss, self).__init__()
@@ -212,7 +218,113 @@ import math
 #         return loss
 
 
-class IOUloss:
+# class IOUloss:
+#     """Calculate IoU loss."""
+
+#     """
+#     take from https://github.com/meituan/YOLOv6/blob/main/yolov6/utils/figure_iou.py#L75
+#     """
+
+#     def __init__(self, box_format="xywh", loss_type="siou", reduction="none", eps=1e-7):
+#         """Setting of the class.
+#         Args:
+#             box_format: (string), must be one of 'xywh' or 'xyxy'.
+#             iou_type: (string), can be one of 'ciou', 'diou', 'giou' or 'siou'
+#             reduction: (string), specifies the reduction to apply to the output, must be one of 'none', 'mean','sum'.
+#             eps: (float), a value to avoid divide by zero error.
+#         """
+#         self.box_format = box_format
+#         self.iou_type = loss_type.lower()
+#         self.reduction = reduction
+#         self.eps = eps
+
+#     def __call__(self, box1, box2):
+#         """calculate iou. box1 and box2 are torch tensor with shape [M, 4] and [Nm 4]."""
+#         if box1.shape[0] != box2.shape[0]:
+#             box2 = box2.T
+#             if self.box_format == "xyxy":
+#                 b1_x1, b1_y1, b1_x2, b1_y2 = box1[0], box1[1], box1[2], box1[3]
+#                 b2_x1, b2_y1, b2_x2, b2_y2 = box2[0], box2[1], box2[2], box2[3]
+#             elif self.box_format == "xywh":
+#                 b1_x1, b1_x2 = box1[0] - box1[2] / 2, box1[0] + box1[2] / 2
+#                 b1_y1, b1_y2 = box1[1] - box1[3] / 2, box1[1] + box1[3] / 2
+#                 b2_x1, b2_x2 = box2[0] - box2[2] / 2, box2[0] + box2[2] / 2
+#                 b2_y1, b2_y2 = box2[1] - box2[3] / 2, box2[1] + box2[3] / 2
+#         else:
+#             if self.box_format == "xyxy":
+#                 b1_x1, b1_y1, b1_x2, b1_y2 = torch.split(box1, 1, dim=-1)
+#                 b2_x1, b2_y1, b2_x2, b2_y2 = torch.split(box2, 1, dim=-1)
+
+#             elif self.box_format == "xywh":
+#                 b1_x1, b1_y1, b1_w, b1_h = torch.split(box1, 1, dim=-1)
+#                 b2_x1, b2_y1, b2_w, b2_h = torch.split(box2, 1, dim=-1)
+#                 b1_x1, b1_x2 = b1_x1 - b1_w / 2, b1_x1 + b1_w / 2
+#                 b1_y1, b1_y2 = b1_y1 - b1_h / 2, b1_y1 + b1_h / 2
+#                 b2_x1, b2_x2 = b2_x1 - b2_w / 2, b2_x1 + b2_w / 2
+#                 b2_y1, b2_y2 = b2_y1 - b2_h / 2, b2_y1 + b2_h / 2
+
+#         # Intersection area
+#         inter = (torch.min(b1_x2, b2_x2) - torch.max(b1_x1, b2_x1)).clamp(0) * (
+#             torch.min(b1_y2, b2_y2) - torch.max(b1_y1, b2_y1)
+#         ).clamp(0)
+
+#         # Union Area
+#         w1, h1 = b1_x2 - b1_x1, b1_y2 - b1_y1 + self.eps
+#         w2, h2 = b2_x2 - b2_x1, b2_y2 - b2_y1 + self.eps
+#         union = w1 * h1 + w2 * h2 - inter + self.eps
+#         iou = inter / union
+
+#         cw = torch.max(b1_x2, b2_x2) - torch.min(b1_x1, b2_x1)  # convex width
+#         ch = torch.max(b1_y2, b2_y2) - torch.min(b1_y1, b2_y1)  # convex height
+#         if self.iou_type == "giou":
+#             c_area = cw * ch + self.eps  # convex area
+#             iou = iou - (c_area - union) / c_area
+#         elif self.iou_type in ["diou", "ciou"]:
+#             c2 = cw**2 + ch**2 + self.eps  # convex diagonal squared
+#             rho2 = (
+#                 (b2_x1 + b2_x2 - b1_x1 - b1_x2) ** 2
+#                 + (b2_y1 + b2_y2 - b1_y1 - b1_y2) ** 2
+#             ) / 4  # center distance squared
+#             if self.iou_type == "diou":
+#                 iou = iou - rho2 / c2
+#             elif self.iou_type == "ciou":
+#                 v = (4 / math.pi**2) * torch.pow(
+#                     torch.atan(w2 / h2) - torch.atan(w1 / h1), 2
+#                 )
+#                 with torch.no_grad():
+#                     alpha = v / (v - iou + (1 + self.eps))
+#                 iou = iou - (rho2 / c2 + v * alpha)
+#         elif self.iou_type == "siou":
+#             # SIoU Loss https://arxiv.org/pdf/2205.12740.pdf
+#             s_cw = (b2_x1 + b2_x2 - b1_x1 - b1_x2) * 0.5 + self.eps
+#             s_ch = (b2_y1 + b2_y2 - b1_y1 - b1_y2) * 0.5 + self.eps
+#             sigma = torch.pow(s_cw**2 + s_ch**2, 0.5)
+#             sin_alpha_1 = torch.abs(s_cw) / sigma
+#             sin_alpha_2 = torch.abs(s_ch) / sigma
+#             threshold = pow(2, 0.5) / 2
+#             sin_alpha = torch.where(sin_alpha_1 > threshold, sin_alpha_2, sin_alpha_1)
+#             angle_cost = torch.cos(torch.arcsin(sin_alpha) * 2 - math.pi / 2)
+#             rho_x = (s_cw / cw) ** 2
+#             rho_y = (s_ch / ch) ** 2
+#             gamma = angle_cost - 2
+#             distance_cost = 2 - torch.exp(gamma * rho_x) - torch.exp(gamma * rho_y)
+#             omiga_w = torch.abs(w1 - w2) / torch.max(w1, w2)
+#             omiga_h = torch.abs(h1 - h2) / torch.max(h1, h2)
+#             shape_cost = torch.pow(1 - torch.exp(-1 * omiga_w), 4) + torch.pow(
+#                 1 - torch.exp(-1 * omiga_h), 4
+#             )
+#             iou = iou - 0.5 * (distance_cost + shape_cost)
+#         loss = 1.0 - iou
+
+#         if self.reduction == "sum":
+#             loss = loss.sum()
+#         elif self.reduction == "mean":
+#             loss = loss.mean()
+
+#         return loss
+
+
+class IOUloss(nn.Module):
     """Calculate IoU loss."""
 
     """
@@ -227,12 +339,13 @@ class IOUloss:
             reduction: (string), specifies the reduction to apply to the output, must be one of 'none', 'mean','sum'.
             eps: (float), a value to avoid divide by zero error.
         """
+        super(IOUloss, self).__init__()
         self.box_format = box_format
         self.iou_type = loss_type.lower()
         self.reduction = reduction
         self.eps = eps
 
-    def __call__(self, box1, box2):
+    def forward(self, box1, box2):
         """calculate iou. box1 and box2 are torch tensor with shape [M, 4] and [Nm 4]."""
         if box1.shape[0] != box2.shape[0]:
             box2 = box2.T
@@ -343,3 +456,165 @@ def pairwise_bbox_iou(box1, box2, box_format="xywh"):
     valid = (lt < rb).type(lt.type()).prod(dim=2)
     inter = torch.prod(rb - lt, 2) * valid
     return inter / (area_1[:, None] + area_2 - inter)
+
+
+class IOU_SSIM(nn.Module):
+    """Calculate IoU loss."""
+
+    """
+    take from https://github.com/meituan/YOLOv6/blob/main/yolov6/utils/figure_iou.py#L75
+    """
+
+    def __init__(
+        self,
+        box_format="xywh",
+        loss_type="siou",
+        reduction="none",
+        eps=1e-7,
+        cal_thresh=0.3,
+        size=(32, 32),
+        **kwargs
+    ):
+        """Setting of the class.
+        Args:
+            box_format: (string), must be one of 'xywh' or 'xyxy'.
+            iou_type: (string), can be one of 'ciou', 'diou', 'giou' or 'siou'
+            reduction: (string), specifies the reduction to apply to the output, must be one of 'none', 'mean','sum'.
+            eps: (float), a value to avoid divide by zero error.
+        """
+        super(IOU_SSIM, self).__init__()
+        self.box_format = box_format
+        self.iou_type = loss_type.lower()
+        self.reduction = reduction
+        self.eps = eps
+        self.cal_thresh = cal_thresh
+        self.size = size
+        self.ssim = SSIM_Loss(in_channels=3)
+        self.mse = nn.L1Loss(size_average=None, reduce=None, reduction="none")
+
+    def forward(
+        self,
+        batch_idx_pred_targets: list,
+        batch_idx_reg_targets: list,
+        imgs: torch.Tensor,
+    ):
+        if self.cal_thresh >= 1:
+            return 0
+        assert len(batch_idx_pred_targets) == len(
+            batch_idx_reg_targets
+        ), "batch do not match"
+        assert len(batch_idx_pred_targets) == imgs.shape[0], "batch do not match"
+        pred_img_batches = []
+        reg_img_batches = []
+        Loss = 0
+        batches = len(batch_idx_pred_targets)
+        for i in range(batches):  # TODO
+            batch_idx_pred_target = batch_idx_pred_targets[i]
+            batch_idx_reg_target = batch_idx_reg_targets[i]
+            H, W = imgs[i].shape[-2], imgs[i].shape[-1]
+            for box1 in batch_idx_reg_target:
+                for box2 in batch_idx_pred_target:
+                    if box2[3] > 2 and box2[2] > 2:
+                        iou = self.get_two_box_iou(box1, box2)
+                        if iou > self.cal_thresh:
+                            try:
+                                gt_patch = imgs[i][
+                                    :,
+                                    max(0, int(box1[1] - box1[3] / 2)) : min(
+                                        int(box1[1] + box1[3] / 2), H
+                                    ),
+                                    max(0, int(box1[0] - box1[2] / 2)) : min(
+                                        int(box1[0] + box1[2] / 2), W
+                                    ),
+                                ]
+                                pred_patch = imgs[i][
+                                    :,
+                                    max(0, int(box2[1] - box2[3] / 2)) : min(
+                                        int(box2[1] + box2[3] / 2), H
+                                    ),
+                                    max(0, int(box2[0] - box2[2] / 2)) : min(
+                                        int(box2[0] + box2[2] / 2), W
+                                    ),
+                                ]
+
+                                if self.size:
+                                    gt_patch = F.interpolate(
+                                        gt_patch.unsqueeze(0),
+                                        size=self.size,
+                                        mode="bilinear",
+                                    )
+                                    pred_patch = F.interpolate(
+                                        pred_patch.unsqueeze(0),
+                                        size=self.size,
+                                        mode="bilinear",
+                                    )
+                                pred_img_batches.append(pred_patch)
+                                reg_img_batches.append(gt_patch)
+                            except Exception as e:
+                                cprint(
+                                    "GT box as {} -- Pred box as {} in format cxcywh, gt shape with {} pred shape with {}".format(
+                                        box1, box2, gt_patch.shape, pred_patch.shape
+                                    ),
+                                    color="yellow",
+                                )
+                                continue
+                            # img = imgs[0][0].detach().clone().cpu().numpy().astype(np.uint8)
+                            # cv2.imwrite('/ai/mnt/code/YOLOX/raw.png',img)
+                            # cv2.rectangle(img,(int(box1[0] - box1[2] / 2),int(box1[1] - box1[3] / 2)),(int(box1[0] + box1[2] / 2),int(
+                            #            box1[1] + box1[3] / 2
+                            #        )),color = 45,thickness = 4)
+
+                            # cv2.rectangle(
+                            #    img,
+                            #     (
+                            #         int(box2[0] - box2[2] / 2),
+                            #         int(box2[1] - box2[3] / 2),
+                            #     ),
+                            #     (
+                            #         int(box2[0] + box2[2] / 2),
+                            #         int(box2[1] + box2[3] / 2),
+                            #     ),
+                            #     color=3,
+                            #     thickness=4,
+                            # )
+
+                            # cv2.rectangle(
+                            #    img,
+                            #     (
+                            #         int(box2[1]),
+                            #         int(box2[0]),
+                            #     ),
+                            #     (
+                            #         int(box2[2]),
+                            #         int(box2[3]),
+                            #     ),
+                            #     color=3,
+                            #     thickness=4,
+                            # )
+
+        if len(pred_img_batches) > 0:
+            pred_tensor = torch.cat(pred_img_batches, dim=0)
+            gt_tensor = torch.cat(reg_img_batches, dim=0)
+            loss = self.mse(pred_tensor / 255, gt_tensor / 255) + self.ssim(
+                pred_tensor, gt_tensor
+            )
+            Loss = Loss + loss
+        else:
+            Loss = Loss + 0
+        if isinstance(Loss, int):
+            return 0
+        else:
+            return Loss.mean()
+
+    def get_two_box_iou(self, box1, box2):
+        tl = torch.max((box1[:2] - box1[2:] / 2), (box2[:2] - box2[2:] / 2))
+        br = torch.min((box1[:2] + box1[2:] / 2), (box2[:2] + box2[2:] / 2))
+
+        area_p = torch.prod(box1[2:], 0)
+        area_g = torch.prod(box2[2:], 0)
+
+        en = (tl < br).type(tl.type()).prod(dim=0)
+        area_i = torch.prod(br - tl, 0) * en
+        area_u = area_p + area_g - area_i
+        iou = (area_i) / (area_u + 1e-16)
+        return iou

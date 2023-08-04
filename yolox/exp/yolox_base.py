@@ -28,7 +28,8 @@ class Exp(BaseExp):
         self.act = "silu"
         self.iou_type = "giou"
         self.box_contain_thresh = 0.1
-        self.use_cab = False
+        self.cal_thresh = 0.3
+        self.ssim_size = (32, 32)
 
         # ---------------- dataloader config ---------------- #
         # set worker to 4 for shorter dataloader init time
@@ -146,6 +147,8 @@ class Exp(BaseExp):
                 in_channels=in_channels,
                 act=self.act,
                 iou_type=self.iou_type,
+                cal_thresh=self.cal_thresh,
+                ssim_size=self.ssim_size,
             )
             self.model = YOLOX(backbone, head)
 

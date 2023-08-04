@@ -59,6 +59,8 @@ class Trainer:
 
         # metric record
         self.meter = MeterBuffer(window_size=exp.print_interval)
+        # if not args.no_debug:
+        #     exp.exp_name = "DEBUG@" + exp.exp_name.split("@")[1]
         self.file_name = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Degree", exp.exp_name
         )
@@ -261,7 +263,7 @@ class Trainer:
             )
             loss_meter = self.meter.get_filtered_meter("loss")
             loss_str = ", ".join(
-                ["{}: {:.1f}".format(k, v.latest) for k, v in loss_meter.items()]
+                ["{}: {:.3f}".format(k, v.latest) for k, v in loss_meter.items()]
             )
 
             time_meter = self.meter.get_filtered_meter("time")

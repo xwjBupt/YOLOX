@@ -9,7 +9,7 @@ from yolox.exp import Exp as MyExp
 class Exp(MyExp):
     def __init__(self):
         super(Exp, self).__init__()
-        MODELNAME = "YOLOX"
+        MODELNAME = "YOLOX#L"
         if MODELNAME == "YOLOX":
             self.depth = 1.33
             self.width = 1.25
@@ -71,10 +71,10 @@ class Exp(MyExp):
         self.val_ann = "val_degree.json"
         self.test_ann = "val_degree.json"
         self.fold = "FOLD0"
-        self.cal_thresh = 0.3
+        self.cal_thresh = 0.1
         self.ssim_size = (32, 32)
         self.exp_name = (
-            "%s-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-fixed_iou_similarity0.3_V32"
+            "%s-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-fixed_iou_similarity0.1_V32"
             % MODELNAME
         )
         self.output_dir = os.path.join(

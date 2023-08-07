@@ -44,8 +44,8 @@ class Exp(MyExp):
             assert False, "{} do not support yet"
         self.nmsthre = 0.35
         self.iou_type = "siou"
-        self.input_size = (1024, 1024)
-        self.test_size = (1024, 1024)
+        self.input_size = (640, 640)
+        self.test_size = (640, 640)
         self.multiscale_range = 8
         self.crop_dict = dict(
             width=256,
@@ -74,7 +74,7 @@ class Exp(MyExp):
         self.fold = "FOLD0"
         self.cal_thresh = 1.5
         self.ssim_size = (32, 32)
-        self.exp_name = "%s-ALL-NMS0.35-V1024-SR8-siou" % MODELNAME
+        self.exp_name = "%s-ALL-NMS0.35-V640-SR8-siou" % MODELNAME
         self.output_dir = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Binary", self.exp_name
         )

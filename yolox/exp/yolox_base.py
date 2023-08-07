@@ -27,11 +27,13 @@ class Exp(BaseExp):
         # activation name. For example, if using "relu", then "silu" will be replaced to "relu".
         self.act = "silu"
         self.use_cab = False
+        self.cal_thresh = 1.5
+        self.size = (32, 32)
 
         # ---------------- dataloader config ---------------- #
         # set worker to 4 for shorter dataloader init time
         # If your training process cost many memory, reduce this value.
-        self.data_num_workers = 4
+        self.data_num_workers = 16
         self.input_size = (640, 640)  # (height, width)
         # Actual multiscale ranges: [640 - 5 * 32, 640 + 5 * 32].
         # To disable multiscale training, set the value to 0.

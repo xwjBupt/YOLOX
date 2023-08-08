@@ -65,7 +65,7 @@ class Exp(MyExp):
         self.cut_copy_dict = dict(
             iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0.25  # 0.25
         )
-        self.clip_dict = dict(low=48, high=192, p=0.25)  # 0.25
+        self.clip_dict = dict(low=48, high=192, p=0)  # 0.25
         # Define yourself dataset path
         self.data_dir = "/ai/mnt/data/stenosis/selected/Binary/FOLD0/COCO"
         self.train_ann = "train_binary.json"
@@ -75,7 +75,7 @@ class Exp(MyExp):
         self.cal_thresh = 1.5
         self.ssim_size = (32, 32)
         self.exp_name = (
-            "%s-ALL-NMS0.35-V1024-SR8-siou-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25"
+            "%s-ALL-NMS0.35-V1024-SR8-siou-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5"
             % MODELNAME
         )
         # ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-fixed_iou_similarity0.3_V32"

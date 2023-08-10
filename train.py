@@ -175,29 +175,38 @@ def main(exp: Exp, args):
     configure_nccl()
     configure_omp()
     cudnn.benchmark = True
-    trainer = exp.get_trainer(args)
-    output_exp_file = trainer.train()
-    print("\n &&&&&&& eval Start &&&&&&& \n")
-    os.system(
-        "python {} --exp_file {}".format("/ai/mnt/code/YOLOX/eval.py", output_exp_file)
-    )
-    print("\n &&&&&&& eval Done &&&&&&& \n")
+    output_exp_file = "not implemeted"
+    try:
+        trainer = exp.get_trainer(args)
+        output_exp_file = trainer.train()
+    except KeyboardInterrupt:
+        print("User stop by keyboard")
+    finally:
+        print(output_exp_file)
+        if output_exp_file != "not implemeted":
+            print("\n &&&&&&& eval Start &&&&&&& \n")
+            os.system(
+                "python {} --exp_file {}".format(
+                    "/ai/mnt/code/YOLOX/eval.py", output_exp_file
+                )
+            )
+            print("\n &&&&&&& eval Done &&&&&&& \n")
 
-    print("\n @@@@@@ visualize_assign Start @@@@@@ \n")
-    os.system(
-        "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/visualize_assign.py", output_exp_file
-        )
-    )
-    print("\n @@@@@@ visualize_assign Done @@@@@@ \n")
+            print("\n @@@@@@ visualize_assign Start @@@@@@ \n")
+            os.system(
+                "python {} --exp_file {}".format(
+                    "/ai/mnt/code/YOLOX/visualize_assign.py", output_exp_file
+                )
+            )
+            print("\n @@@@@@ visualize_assign Done @@@@@@ \n")
 
-    print("\n ####### infer_show Start ###### \n")
-    os.system(
-        "python {} --exp_file {}".format(
-            "/ai/mnt/code/YOLOX/infer_show.py", output_exp_file
-        )
-    )
-    print("\n ####### infer_show Done ###### \n")
+            print("\n ####### infer_show Start ###### \n")
+            os.system(
+                "python {} --exp_file {}".format(
+                    "/ai/mnt/code/YOLOX/infer_show.py", output_exp_file
+                )
+            )
+            print("\n ####### infer_show Done ###### \n")
 
 
 if __name__ == "__main__":

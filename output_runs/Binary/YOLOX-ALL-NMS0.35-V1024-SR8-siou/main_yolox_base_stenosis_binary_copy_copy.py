@@ -54,16 +54,16 @@ class Exp(MyExp):
             min_area=64,
             min_visibility=0,
             format="coco",
-            random_rate=0.5,  # 0.5
+            random_rate=0,  # 0.5
         )
         self.zoom_blur_dict = dict(
-            blur_limit=7, allow_shifted=True, always_apply=False, p=0.35  # 0.35
+            blur_limit=7, allow_shifted=True, always_apply=False, p=0  # 0.35
         )
         self.motion_blur_dict = dict(
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0  # 0.4
         )
         self.cut_copy_dict = dict(
-            iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0.25  # 0.25
+            iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0  # 0.25
         )
         self.clip_dict = dict(low=48, high=192, p=0)  # 0.25
         # Define yourself dataset path
@@ -74,11 +74,7 @@ class Exp(MyExp):
         self.fold = "FOLD0"
         self.cal_thresh = 1.5
         self.ssim_size = (32, 32)
-        self.exp_name = (
-            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-cutcopy_ex5-siou"
-            % MODELNAME
-        )
-        # ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-fixed_iou_similarity0.3_V32"
+        self.exp_name = "%s-ALL-NMS0.35-V1024-SR8-siou" % MODELNAME
         self.output_dir = os.path.join(
             "/ai/mnt/code/YOLOX/output_runs/Binary", self.exp_name
         )

@@ -63,7 +63,7 @@ class Exp(MyExp):
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0  # 0.4
         )
         self.cut_copy_dict = dict(
-            iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0  # 0.25
+            iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0.25  # 0.25
         )
         self.clip_dict = dict(low=48, high=192, p=0)  # 0.25
         # Define yourself dataset path
@@ -72,10 +72,10 @@ class Exp(MyExp):
         self.val_ann = "val_binary.json"
         self.test_ann = "val_binary.json"
         self.fold = "FOLD0"
-        self.cal_thresh = 0.2
+        self.cal_thresh = 0.3
         self.ssim_size = (32, 32)
         self.exp_name = (
-            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-siou-fixed_iou_similarity0.2_V32"
+            "%s-ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-cutcopy_ex5-siou-fixed_iou_similarity0.3_V32"
             % MODELNAME
         )
         # ALL-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION.04-tf5e_3-cutcopy_ex5-clip0.25-siou-fixed_iou_similarity0.3_V32"

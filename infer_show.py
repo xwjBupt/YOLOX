@@ -243,8 +243,8 @@ def image_demo(predictor, save_folder, path, current_time, save_result):
         outputs, img_info = predictor.inference(image_name)
         result_image = predictor.visual(outputs[0], img_info, predictor.confthre)
         gt_name = image_name[:-4] + ".json"
-        if os.path.exists(gt_name):
-            result_image = add_gt_infos(gt_name, result_image)
+        # if os.path.exists(gt_name):
+        #     result_image = add_gt_infos(gt_name, result_image)
         save_file_name = os.path.join(
             save_folder, phase + "@" + os.path.basename(image_name)
         )

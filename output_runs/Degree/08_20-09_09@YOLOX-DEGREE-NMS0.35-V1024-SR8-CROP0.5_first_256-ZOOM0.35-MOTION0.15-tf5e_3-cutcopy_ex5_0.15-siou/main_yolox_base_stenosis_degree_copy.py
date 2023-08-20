@@ -62,7 +62,7 @@ class Exp(MyExp):
             max_factor=1.31, step_factor=(0.01, 0.03), always_apply=False, p=0.15
         )
         self.cut_copy_dict = dict(
-            iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0
+            iou_thresh=0.2, paste_number=10, thresh=64, expand=5, p=0.15
         )
         self.clip_dict = dict(low=48, high=192, p=0)
         # Define yourself dataset path
@@ -74,7 +74,7 @@ class Exp(MyExp):
         self.cal_thresh = 1.5
         self.ssim_size = (32, 32)
         self.exp_name = (
-            "%s-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION0.15-siou"
+            "%s-DEGREE-NMS0.35-V1024-SR8-CROP0.5_first_256-ZOOM0.35-MOTION0.15-tf5e_3-cutcopy_ex5_0.15-siou"
             % MODELNAME
         )
         self.output_dir = os.path.join(
